@@ -10,7 +10,13 @@ require("dotenv").config();
 
 const app = express();
 const PORT = 5000;
-const CLIENT_ORIGINS = ["http://localhost:5173", "http://localhost:5174"];
+const CLIENT_ORIGINS = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://localhost:5177",
+];
 
 const isPasswordValid = (password) => {
   if (typeof password !== "string") return false;
@@ -31,10 +37,14 @@ const isPhoneValid = (phone) => {
   return /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
 };
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+if (process.env.MONGO_URI) {
+  mongoose
+    .connect(process.env.MONGO_URI)
+    .then(() => console.log("MongoDB connected"))
+    .catch((err) => console.error("MongoDB connection error:", err));
+} else {
+  console.log("⚠️  MongoDB URI not configured (development mode)");
+}
 
 // Middleware
 app.use(
@@ -44,6 +54,18 @@ app.use(
   }),
 ); // מאפשר לריאקט (שיושב על פורט אחר) לדבר עם השרת
 app.use(express.json()); // מאפשר לשרת לקרוא מידע בפורמט JSON
+
+// Configure session store - use MongoDB if available, fallback to memory store for development
+let sessionStore;
+if (process.env.MONGO_URI) {
+  sessionStore = MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: "sessions",
+  });
+} else {
+  console.log("⚠️  Using in-memory session store (development mode)");
+  sessionStore = new session.MemoryStore();
+}
 
 app.use(
   session({
@@ -55,10 +77,7 @@ app.use(
       maxAge: 1000 * 60 * 60 * 24,
       sameSite: "lax",
     },
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGO_URI,
-      collectionName: "sessions",
-    }),
+    store: sessionStore,
   }),
 );
 
@@ -83,7 +102,7 @@ app.post("/api/generate-qr", async (req, res) => {
     const qrImage = await QRCode.toDataURL(text, {
       color: {
         dark: color || "#000000", // צבע הריבועים
-        light: bgColor || "#FFFFFF", // צבע הרקע
+        light: bgColor === "transparent" ? "#00000000" : bgColor || "#FFFFFF", // צבע הרקע - תמיכה בשקיפות
       },
       width: 400,
       margin: 2,

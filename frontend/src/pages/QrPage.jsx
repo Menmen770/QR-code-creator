@@ -9,6 +9,7 @@ import {
   FiWifi,
   FiUser,
   FiMessageCircle,
+  FiEdit2,
 } from "react-icons/fi";
 import {
   BsChat,
@@ -25,13 +26,67 @@ function QrPage() {
   const [qrType, setQrType] = useState("url");
   const [qrValue, setQrValue] = useState("https://example.com");
   const [bgColor, setBgColor] = useState("#ffffff");
-  const [fgColor, setFgColor] = useState("#0a9396");
+  const [fgColor, setFgColor] = useState("#000000");
   const [qrImage, setQrImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("color");
   const [scrollPosition, setScrollPosition] = useState(0);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [fgColorMode, setFgColorMode] = useState("solid"); // "solid" or "effect"
+  const [fgEffect, setFgEffect] = useState("none");
+  const [bgColorMode, setBgColorMode] = useState("solid"); // "none", "solid", or "effect"
+  const [bgEffect, setBgEffect] = useState("none");
+
+  // Background effects
+  const bgEffects = [
+    { id: "none", name: "Solid" },
+    { id: "sunset-silk", name: "Sunset Silk" },
+    { id: "warm-terracotta", name: "Warm Terracotta" },
+    { id: "classic-peach", name: "Classic Peach" },
+    { id: "golden-hour", name: "Golden Hour" },
+    { id: "soft-rose", name: "Soft Rose" },
+    { id: "desert-sand", name: "Desert Sand" },
+    { id: "ocean-breeze", name: "Ocean Breeze" },
+    { id: "purple-dream", name: "Purple Dream" },
+    { id: "mint-fresh", name: "Mint Fresh" },
+    { id: "coral-reef", name: "Coral Reef" },
+    { id: "lavender-mist", name: "Lavender Mist" },
+  ];
+
+  // Get gradient background for effect button
+  const getEffectBackground = (effectId) => {
+    const gradients = {
+      none: "#ffffff",
+      "sunset-silk": "linear-gradient(135deg, #FF512F 0%, #DD2476 100%)",
+      "warm-terracotta": "linear-gradient(135deg, #e5976e 0%, #7f4122 100%)",
+      "classic-peach": "linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%)",
+      "golden-hour": "linear-gradient(135deg, #F2994A 0%, #F2C94C 100%)",
+      "soft-rose": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+      "desert-sand": "linear-gradient(135deg, #cc947c 0%, #8b5a44 100%)",
+      "ocean-breeze": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      "purple-dream": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+      "mint-fresh": "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+      "coral-reef": "linear-gradient(135deg, #ff9a56 0%, #ff6a95 100%)",
+      "lavender-mist": "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+    };
+    return gradients[effectId] || "#ffffff";
+  };
+
+  // Preset colors for quick selection
+  const presetColors = [
+    { name: "Black", hex: "#000000" },
+    { name: "Navy", hex: "#001f3f" },
+    { name: "Teal", hex: "#0a9396" },
+    { name: "Green", hex: "#00a651" },
+    { name: "Purple", hex: "#7c3aed" },
+    { name: "Red", hex: "#dc2626" },
+    { name: "Gray", hex: "#6b7280" },
+    { name: "Orange", hex: "#f97316" },
+    { name: "Blue", hex: "#3b82f6" },
+    { name: "Cyan", hex: "#06b6d4" },
+    { name: "Pink", hex: "#ec4899" },
+  ];
 
   // QR Type options - Main
   const qrTypesMain = [
@@ -61,12 +116,12 @@ function QrPage() {
   const [qrInputs, setQrInputs] = useState({
     url: "https://example.com",
     pdf: "https://example.com/document.pdf",
-    whatsapp: { phone: "+92", message: "Hey! Check this out." },
-    email: { email: "your@email.com", subject: "", message: "" },
-    phone: "+92",
-    sms: { phone: "+92", message: "Check this out!" },
+    whatsapp: { phone: "+972", message: "" },
+    email: { email: "", subject: "", message: "" },
+    phone: "+972",
+    sms: { phone: "+972", message: "" },
     wifi: { ssid: "Network", password: "", security: "WPA" },
-    contact: { name: "John Doe", phone: "+92", email: "john@example.com" },
+    contact: { name: "", phone: "+972", email: "" },
     facebook: "username",
     instagram: "username",
     twitter: "username",
@@ -135,8 +190,10 @@ function QrPage() {
   };
 
   const generateQR = async (text, fg, bg) => {
+    console.log("generateQR called with:", { text, fg, bg });
     if (!text.trim()) {
       setQrImage("");
+      console.log("Text is empty, skipping");
       return;
     }
 
@@ -144,17 +201,24 @@ function QrPage() {
     setError("");
 
     try {
+      console.log("Fetching from API...");
+      // Use transparent background for effects and NO BG, otherwise use the chosen color
+      const bgForAPI =
+        bgColorMode === "effect" || bgColorMode === "none" ? "transparent" : bg;
+
       const response = await fetch("http://localhost:5000/api/generate-qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, color: fg, bgColor: bg }),
+        body: JSON.stringify({ text, color: fg, bgColor: bgForAPI }),
       });
 
+      console.log("Response status:", response.status);
       if (!response.ok) {
         throw new Error("Failed to generate QR code");
       }
 
       const data = await response.json();
+      console.log("Got data, setting image");
       setQrImage(data.qrImage);
     } catch (err) {
       console.error("Error generating QR:", err);
@@ -167,11 +231,18 @@ function QrPage() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
+      console.log("useEffect triggered - calling generateQR");
       generateQR(qrValue, fgColor, bgColor);
     }, 400);
 
     return () => clearTimeout(timeoutId);
-  }, [qrValue, fgColor, bgColor]);
+  }, [qrValue, fgColor, bgColor, bgColorMode, bgEffect]);
+
+  // Initial QR generation on mount
+  useEffect(() => {
+    console.log("Page mounted - generating initial QR");
+    generateQR(qrValue, fgColor, bgColor);
+  }, []);
 
   const downloadQR = (format) => {
     if (!qrImage) return;
@@ -401,7 +472,7 @@ function QrPage() {
                         onChange={(e) =>
                           handleInputChange("sms.phone", e.target.value)
                         }
-                        placeholder="+92 123 456 7890"
+                        placeholder="+972 123 456 789"
                         className="form-control form-control-lg"
                       />
                     </div>
@@ -479,7 +550,7 @@ function QrPage() {
                         onChange={(e) =>
                           handleInputChange("contact.name", e.target.value)
                         }
-                        placeholder="John Doe"
+                        placeholder="your name"
                         className="form-control form-control-lg"
                       />
                     </div>
@@ -491,7 +562,7 @@ function QrPage() {
                         onChange={(e) =>
                           handleInputChange("contact.phone", e.target.value)
                         }
-                        placeholder="+92 123 456 7890"
+                        placeholder="+972 123 456 789"
                         className="form-control form-control-lg"
                       />
                     </div>
@@ -659,42 +730,302 @@ function QrPage() {
                 </ul>
 
                 {activeTab === "color" && (
-                  <div className="vstack gap-3">
-                    <div>
-                      <label className="form-label">Foreground (QR Dots)</label>
-                      <div className="d-flex gap-2">
+                  <div className="vstack gap-4">
+                    {/* QR Dots Color Section */}
+                    <div className="qr-color-section">
+                      <label className="form-label fw-bold mb-3">
+                        QR Dots Color
+                      </label>
+
+                      {/* Color Selection */}
+                      <div className="d-flex gap-2 flex-wrap">
+                        {presetColors.map((color) => (
+                          <button
+                            key={color.hex}
+                            onClick={() => setFgColor(color.hex)}
+                            style={{
+                              width: "48px",
+                              height: "48px",
+                              backgroundColor: color.hex,
+                              border:
+                                fgColor === color.hex
+                                  ? "3px solid #0a9396"
+                                  : "none",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                              boxShadow:
+                                fgColor === color.hex
+                                  ? "0 4px 12px rgba(10, 147, 150, 0.4)"
+                                  : "none",
+                              padding: 0,
+                            }}
+                            title={color.name}
+                            onMouseEnter={(e) =>
+                              (e.target.style.transform = "scale(1.1)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.target.style.transform = "scale(1)")
+                            }
+                          />
+                        ))}
+                        <button
+                          onClick={() =>
+                            document
+                              .getElementById("fgCustomColorInput")
+                              .click()
+                          }
+                          style={{
+                            width: "48px",
+                            height: "48px",
+                            backgroundColor: fgColor,
+                            border: "3px solid #0a9396",
+                            borderRadius: "50%",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            boxShadow: "0 4px 12px rgba(10, 147, 150, 0.4)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 0,
+                          }}
+                          title="Custom color"
+                          onMouseEnter={(e) =>
+                            (e.target.style.transform = "scale(1.1)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.target.style.transform = "scale(1)")
+                          }
+                        >
+                          <FiEdit2
+                            size={20}
+                            color="#fff"
+                            style={{
+                              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
+                            }}
+                          />
+                        </button>
                         <input
+                          id="fgCustomColorInput"
                           type="color"
                           value={fgColor}
                           onChange={(e) => setFgColor(e.target.value)}
-                          className="form-control form-control-color"
-                          title="Choose foreground color"
-                        />
-                        <input
-                          type="text"
-                          value={fgColor}
-                          onChange={(e) => setFgColor(e.target.value)}
-                          className="form-control font-monospace"
+                          style={{ display: "none" }}
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="form-label">Background</label>
-                      <div className="d-flex gap-2">
-                        <input
-                          type="color"
-                          value={bgColor}
-                          onChange={(e) => setBgColor(e.target.value)}
-                          className="form-control form-control-color"
-                          title="Choose background color"
-                        />
-                        <input
-                          type="text"
-                          value={bgColor}
-                          onChange={(e) => setBgColor(e.target.value)}
-                          className="form-control font-monospace"
-                        />
+
+                    {/* Background Section */}
+                    <hr className="my-2" />
+                    <div className="qr-bg-section">
+                      <label className="form-label fw-bold mb-3">
+                        Background
+                      </label>
+
+                      {/* Mode Selection */}
+                      <div className="d-flex gap-2 mb-3">
+                        <button
+                          onClick={() => setBgColorMode("none")}
+                          style={{
+                            flex: 1,
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            border:
+                              bgColorMode === "none"
+                                ? "2px solid #0a9396"
+                                : "1px solid #d1d5db",
+                            backgroundColor:
+                              bgColorMode === "none" ? "#f0fffe" : "#ffffff",
+                            color:
+                              bgColorMode === "none" ? "#0a9396" : "#6b7280",
+                            fontWeight: bgColorMode === "none" ? "600" : "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          No BG
+                        </button>
+                        <button
+                          onClick={() => setBgColorMode("solid")}
+                          style={{
+                            flex: 1,
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            border:
+                              bgColorMode === "solid"
+                                ? "2px solid #0a9396"
+                                : "1px solid #d1d5db",
+                            backgroundColor:
+                              bgColorMode === "solid" ? "#f0fffe" : "#ffffff",
+                            color:
+                              bgColorMode === "solid" ? "#0a9396" : "#6b7280",
+                            fontWeight: bgColorMode === "solid" ? "600" : "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          Solid Color
+                        </button>
+                        <button
+                          onClick={() => setBgColorMode("effect")}
+                          style={{
+                            flex: 1,
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            border:
+                              bgColorMode === "effect"
+                                ? "2px solid #0a9396"
+                                : "1px solid #d1d5db",
+                            backgroundColor:
+                              bgColorMode === "effect" ? "#f0fffe" : "#ffffff",
+                            color:
+                              bgColorMode === "effect" ? "#0a9396" : "#6b7280",
+                            fontWeight:
+                              bgColorMode === "effect" ? "600" : "500",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                          }}
+                        >
+                          Effect
+                        </button>
                       </div>
+
+                      {/* Color Selection */}
+                      {bgColorMode !== "none" && (
+                        <div className="d-flex gap-2 flex-wrap">
+                          {bgColorMode === "solid" ? (
+                            <>
+                              {presetColors.map((color) => (
+                                <button
+                                  key={color.hex}
+                                  onClick={() => setBgColor(color.hex)}
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    backgroundColor: color.hex,
+                                    border:
+                                      bgColor === color.hex
+                                        ? "3px solid #0a9396"
+                                        : "none",
+                                    borderRadius: "50%",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    boxShadow:
+                                      bgColor === color.hex
+                                        ? "0 4px 12px rgba(10, 147, 150, 0.4)"
+                                        : "none",
+                                    padding: 0,
+                                  }}
+                                  title={color.name}
+                                  onMouseEnter={(e) =>
+                                    (e.target.style.transform = "scale(1.1)")
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.target.style.transform = "scale(1)")
+                                  }
+                                />
+                              ))}
+                              <button
+                                onClick={() =>
+                                  document
+                                    .getElementById("bgCustomColorInput")
+                                    .click()
+                                }
+                                style={{
+                                  width: "48px",
+                                  height: "48px",
+                                  backgroundColor: bgColor,
+                                  border: "3px solid #0a9396",
+                                  borderRadius: "50%",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  boxShadow:
+                                    "0 4px 12px rgba(10, 147, 150, 0.4)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  padding: 0,
+                                }}
+                                title="Custom color"
+                                onMouseEnter={(e) =>
+                                  (e.target.style.transform = "scale(1.1)")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.target.style.transform = "scale(1)")
+                                }
+                              >
+                                <FiEdit2
+                                  size={20}
+                                  color={
+                                    bgColor === "#ffffff" ? "#000" : "#fff"
+                                  }
+                                  style={{
+                                    filter:
+                                      "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
+                                  }}
+                                />
+                              </button>
+                              <input
+                                id="bgCustomColorInput"
+                                type="color"
+                                value={bgColor}
+                                onChange={(e) => setBgColor(e.target.value)}
+                                style={{ display: "none" }}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {bgEffects.map((effect) => (
+                                <button
+                                  key={effect.id}
+                                  onClick={() => setBgEffect(effect.id)}
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    borderRadius: "50%",
+                                    border:
+                                      bgEffect === effect.id
+                                        ? "3px solid #0a9396"
+                                        : "2px solid #e8e8e8",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    background: getEffectBackground(effect.id),
+                                    boxShadow:
+                                      bgEffect === effect.id
+                                        ? "0 4px 12px rgba(10, 147, 150, 0.4)"
+                                        : "none",
+                                    padding: 0,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "11px",
+                                    fontWeight: "600",
+                                    color:
+                                      effect.id === "none"
+                                        ? bgEffect === effect.id
+                                          ? "#0a9396"
+                                          : "#6b7280"
+                                        : "#ffffff",
+                                    textShadow:
+                                      effect.id === "none"
+                                        ? "none"
+                                        : "0 1px 2px rgba(0,0,0,0.5)",
+                                  }}
+                                  title={effect.name}
+                                  onMouseEnter={(e) =>
+                                    (e.target.style.transform = "scale(1.1)")
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.target.style.transform = "scale(1)")
+                                  }
+                                >
+                                  {effect.id === "none" ? "⚪" : ""}
+                                </button>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -738,8 +1069,20 @@ function QrPage() {
                 </div>
 
                 <div
-                  className="qr-preview mb-4 flex-grow-1"
-                  style={{ background: bgColor }}
+                  className={`qr-preview mb-4 flex-grow-1 ${
+                    bgColorMode === "none"
+                      ? "transparent-bg"
+                      : bgColorMode === "effect" && bgEffect !== "none"
+                        ? `effect-${bgEffect}`
+                        : ""
+                  }`}
+                  style={
+                    bgColorMode === "effect" && bgEffect !== "none"
+                      ? {}
+                      : bgColorMode === "none"
+                        ? {}
+                        : { background: bgColor }
+                  }
                 >
                   {loading && (
                     <div className="text-center">

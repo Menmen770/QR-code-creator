@@ -275,6 +275,21 @@
   box-shadow: 0 20px 40px rgba(24, 39, 75, 0.08);
 }
 
+.qr-preview.transparent-bg {
+  background-image:
+    linear-gradient(45deg, #e8e8e8 25%, transparent 25%),
+    linear-gradient(-45deg, #e8e8e8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e8e8e8 75%),
+    linear-gradient(-45deg, transparent 75%, #e8e8e8 75%);
+  background-size: 20px 20px;
+  background-position:
+    0 0,
+    0 10px,
+    10px -10px,
+    -10px 0px;
+  background-color: #ffffff;
+}
+
 .qr-image {
   max-width: 280px;
   max-height: 280px;
@@ -517,4 +532,79 @@
   .robot-widget {
     display: none;
   }
+}
+
+/* Background Effects for QR Preview */
+.qr-preview-effect {
+  position: relative;
+  background: #ffffff;
+}
+
+/* Sunset Silk Effect */
+.qr-preview.effect-sunset-silk {
+  background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%);
+}
+
+/* Warm Terracotta Effect */
+.qr-preview.effect-warm-terracotta {
+  background: linear-gradient(135deg, #e5976e 0%, #7f4122 100%);
+}
+
+/* Classic Peach Effect */
+.qr-preview.effect-classic-peach {
+  background: linear-gradient(135deg, #ff9a8b 0%, #ff6a88 100%);
+}
+
+/* Golden Hour Effect */
+.qr-preview.effect-golden-hour {
+  background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+}
+
+/* Soft Rose Effect */
+.qr-preview.effect-soft-rose {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Desert Sand Effect */
+.qr-preview.effect-desert-sand {
+  background: linear-gradient(135deg, #cc947c 0%, #8b5a44 100%);
+}
+
+/* Ocean Breeze Effect */
+.qr-preview.effect-ocean-breeze {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Purple Dream Effect */
+.qr-preview.effect-purple-dream {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+/* Mint Fresh Effect */
+.qr-preview.effect-mint-fresh {
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+/* Coral Reef Effect */
+.qr-preview.effect-coral-reef {
+  background: linear-gradient(135deg, #ff9a56 0%, #ff6a95 100%);
+}
+
+/* Lavender Mist Effect */
+.qr-preview.effect-lavender-mist {
+  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+}
+
+/* Rainbow Wave Effect */
+.qr-preview.effect-rainbow-wave {
+  background: linear-gradient(
+    45deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #0000ff,
+    #4b0082,
+    #9400d3
+  );
 }
