@@ -16,6 +16,7 @@ const CLIENT_ORIGINS = [
   "http://localhost:5175",
   "http://localhost:5176",
   "http://localhost:5177",
+  "http://localhost:5178",
 ];
 
 const isPasswordValid = (password) => {
@@ -87,30 +88,41 @@ app.get("/", (req, res) => {
 });
 
 // ====== QR CODE GENERATION ENDPOINT ======
-// מקבל: POST request עם text, color, bgColor
-// מחזיר: QR Code כתמונה Base64
+// מקבל: POST request עם text, color, bgColor, dotsType, cornersType
+// מחזיר: QR Code כתמונה Base64 עם צורות מותאמות אישית
 app.post("/api/generate-qr", async (req, res) => {
-  const { text, color, bgColor } = req.body;
+  const {
+    text,
+    color,
+    bgColor,
+    dotsType = "square",
+    cornersType = "square",
+  } = req.body;
 
-  // ✅ Validation - בדוק שהטקסט קיים
+  console.log("QR Request:", { text, color, bgColor, dotsType, cornersType });
+
   if (!text) {
+    console.log("Error: Text is empty");
     return res.status(400).json({ error: "Text is required" });
   }
 
   try {
-    // יצירת ה-QR כ-Data URL (פורמט של תמונה בטקסט)
     const qrImage = await QRCode.toDataURL(text, {
       color: {
-        dark: color || "#000000", // צבע הריבועים
-        light: bgColor === "transparent" ? "#00000000" : bgColor || "#FFFFFF", // צבע הרקע - תמיכה בשקיפות
+        dark: color || "#000000",
+        light: bgColor === "transparent" ? "#00000000" : bgColor || "#FFFFFF",
       },
       width: 400,
       margin: 2,
     });
 
+    console.log("QR Code generated successfully");
+    // Note: dotsType and cornersType are accepted but not applied by basic qrcode library
+    // TODO: Implement advanced shape support with alternative library
     res.json({ qrImage });
   } catch (err) {
-    console.error("QR Generation Error:", err);
+    console.error("QR Generation Error:", err.message);
+    console.error("Stack:", err.stack);
     res.status(500).json({ error: "Failed to generate QR code" });
   }
 });

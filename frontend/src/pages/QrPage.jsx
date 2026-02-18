@@ -37,6 +37,11 @@ function QrPage() {
   const [fgEffect, setFgEffect] = useState("none");
   const [bgColorMode, setBgColorMode] = useState("solid"); // "none", "solid", or "effect"
   const [bgEffect, setBgEffect] = useState("none");
+  const [pdfFile, setPdfFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [pdfInputMode, setPdfInputMode] = useState("file"); // "file" or "url"
+  const [dotsType, setDotsType] = useState("square"); // QR dots shape
+  const [cornersType, setCornersType] = useState("square"); // QR corners shape
 
   // Background effects
   const bgEffects = [
@@ -72,6 +77,22 @@ function QrPage() {
     };
     return gradients[effectId] || "#ffffff";
   };
+
+  // Shape options for QR customization
+  const bodyShapes = [
+    { id: "square", name: "Square" },
+    { id: "dots", name: "Dots" },
+    { id: "rounded", name: "Rounded" },
+    { id: "extra-rounded", name: "Extra Rounded" },
+    { id: "classy", name: "Classy" },
+    { id: "classy-rounded", name: "Classy Rounded" },
+  ];
+
+  const cornerShapes = [
+    { id: "square", name: "Square" },
+    { id: "dot", name: "Dot" },
+    { id: "extra-rounded", name: "Extra Rounded" },
+  ];
 
   // Preset colors for quick selection
   const presetColors = [
@@ -115,7 +136,7 @@ function QrPage() {
   // QR Type specific inputs
   const [qrInputs, setQrInputs] = useState({
     url: "https://example.com",
-    pdf: "https://example.com/document.pdf",
+    pdf: "",
     whatsapp: { phone: "+972", message: "" },
     email: { email: "", subject: "", message: "" },
     phone: "+972",
@@ -171,12 +192,15 @@ function QrPage() {
   };
 
   const handleQRTypeChange = (newType) => {
+    console.log("QR Type changed from", qrType, "to", newType);
     setQrType(newType);
     const newValue = buildQRValue(newType, qrInputs);
+    console.log("New QR value after type change:", newValue);
     setQrValue(newValue);
   };
 
   const handleInputChange = (path, value) => {
+    console.log("Input changed - Path:", path, "Value:", value);
     const newInputs = JSON.parse(JSON.stringify(qrInputs));
     const keys = path.split(".");
     let obj = newInputs;
@@ -186,14 +210,75 @@ function QrPage() {
     obj[keys[keys.length - 1]] = value;
     setQrInputs(newInputs);
     const newValue = buildQRValue(qrType, newInputs);
+    console.log("New QR value after input change:", newValue);
     setQrValue(newValue);
   };
 
+  const handlePdfDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    console.log("PDF dropped:", file?.name, "Type:", file?.type);
+    if (file && file.type === "application/pdf") {
+      console.log(
+        "Valid PDF file. Setting pdfFile state. Size:",
+        file.size,
+        "bytes",
+      );
+      setPdfFile(file);
+      console.log(
+        "NOTE: qrInputs.pdf remains empty until user switches to URL mode",
+      );
+    } else {
+      console.log("INVALID: File is not a PDF or no file dropped");
+    }
+  };
+
+  const handlePdfDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handlePdfDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handlePdfFileSelect = (e) => {
+    const file = e.target.files[0];
+    console.log("PDF file selected:", file?.name, "Type:", file?.type);
+    if (file && file.type === "application/pdf") {
+      console.log(
+        "Valid PDF file. Setting pdfFile state. Size:",
+        file.size,
+        "bytes",
+      );
+      setPdfFile(file);
+      console.log(
+        "NOTE: qrInputs.pdf remains empty until user switches to URL mode",
+      );
+    } else {
+      console.log("INVALID: File is not a PDF or no file selected");
+    }
+  };
+
   const generateQR = async (text, fg, bg) => {
-    console.log("generateQR called with:", { text, fg, bg });
+    console.log("=== START QR GENERATION ===");
+    console.log("Input parameters:", {
+      text: text,
+      textLength: text?.length,
+      fgColor: fg,
+      bgColor: bg,
+      bgColorMode: bgColorMode,
+      bgEffect: bgEffect,
+      qrType: qrType,
+      dotsType: dotsType,
+      cornersType: cornersType,
+    });
+
     if (!text.trim()) {
+      console.log("SKIP REASON: Text is empty or whitespace only");
       setQrImage("");
-      console.log("Text is empty, skipping");
       return;
     }
 
@@ -201,27 +286,49 @@ function QrPage() {
     setError("");
 
     try {
-      console.log("Fetching from API...");
-      // Use transparent background for effects and NO BG, otherwise use the chosen color
       const bgForAPI =
         bgColorMode === "effect" || bgColorMode === "none" ? "transparent" : bg;
+
+      console.log("Preparing API request...");
+      console.log("Background color for API:", bgForAPI);
+      console.log("Dots type:", dotsType);
+      console.log("Corners type:", cornersType);
+      console.log("API endpoint: http://localhost:5000/api/generate-qr");
+
+      const requestBody = {
+        text,
+        color: fg,
+        bgColor: bgForAPI,
+        dotsType: dotsType,
+        cornersType: cornersType,
+      };
+      console.log("Request body:", JSON.stringify(requestBody));
 
       const response = await fetch("http://localhost:5000/api/generate-qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, color: fg, bgColor: bgForAPI }),
+        body: JSON.stringify(requestBody),
       });
 
-      console.log("Response status:", response.status);
+      console.log("Response received. Status:", response.status);
+
       if (!response.ok) {
-        throw new Error("Failed to generate QR code");
+        const errorText = await response.text();
+        console.log("ERROR: Response not OK. Status:", response.status);
+        console.log("Error details:", errorText);
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("Got data, setting image");
+      console.log("SUCCESS: QR code generated");
+      console.log("Image data length:", data.qrImage?.length || 0);
       setQrImage(data.qrImage);
+      console.log("=== END QR GENERATION (SUCCESS) ===");
     } catch (err) {
-      console.error("Error generating QR:", err);
+      console.log("=== QR GENERATION FAILED ===");
+      console.log("Error type:", err.name);
+      console.log("Error message:", err.message);
+      console.log("Full error:", err);
       setError("Failed to generate QR code");
       setQrImage("");
     } finally {
@@ -230,17 +337,64 @@ function QrPage() {
   };
 
   useEffect(() => {
+    console.log("--- useEffect TRIGGERED ---");
+    console.log("Current state:", {
+      qrType: qrType,
+      pdfInputMode: pdfInputMode,
+      pdfHasUrl: !!qrInputs.pdf,
+      qrValue: qrValue,
+      qrValueLength: qrValue?.length,
+    });
+
     const timeoutId = setTimeout(() => {
-      console.log("useEffect triggered - calling generateQR");
+      console.log("Timeout expired (400ms). Checking if should generate QR...");
+
+      // Don't generate QR if we're in PDF file mode without a URL
+      if (qrType === "pdf" && pdfInputMode === "file" && !qrInputs.pdf) {
+        console.log("SKIP: PDF in file mode without URL");
+        console.log(
+          "Details: qrType=" +
+            qrType +
+            ", pdfInputMode=" +
+            pdfInputMode +
+            ", pdf url empty=" +
+            !qrInputs.pdf,
+        );
+        setQrImage("");
+        return;
+      }
+
+      console.log("Proceeding to generate QR...");
       generateQR(qrValue, fgColor, bgColor);
     }, 400);
 
-    return () => clearTimeout(timeoutId);
-  }, [qrValue, fgColor, bgColor, bgColorMode, bgEffect]);
+    return () => {
+      console.log("useEffect cleanup - clearing timeout");
+      clearTimeout(timeoutId);
+    };
+  }, [
+    qrValue,
+    fgColor,
+    bgColor,
+    bgColorMode,
+    bgEffect,
+    qrType,
+    pdfInputMode,
+    qrInputs.pdf,
+    dotsType,
+    cornersType,
+  ]);
 
   // Initial QR generation on mount
   useEffect(() => {
-    console.log("Page mounted - generating initial QR");
+    console.log("=== COMPONENT MOUNTED ===");
+    console.log("Initial values:", {
+      qrValue: qrValue,
+      fgColor: fgColor,
+      bgColor: bgColor,
+      qrType: qrType,
+    });
+    console.log("Generating initial QR code...");
     generateQR(qrValue, fgColor, bgColor);
   }, []);
 
@@ -360,14 +514,83 @@ function QrPage() {
 
                 {qrType === "pdf" && (
                   <div>
-                    <input
-                      type="url"
-                      value={qrInputs.pdf}
-                      onChange={(e) => handleInputChange("pdf", e.target.value)}
-                      placeholder="https://example.com/document.pdf"
-                      className="form-control form-control-lg"
-                    />
-                    <div className="form-text">Enter a PDF file URL</div>
+                    <div className="d-flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        className={`btn ${pdfInputMode === "file" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setPdfInputMode("file")}
+                      >
+                        <FiFileText className="me-2" />
+                        העלאת קובץ
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${pdfInputMode === "url" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setPdfInputMode("url")}
+                      >
+                        <FiLink className="me-2" />
+                        הדבקת URL
+                      </button>
+                    </div>
+
+                    {pdfInputMode === "file" ? (
+                      <>
+                        <div
+                          className={`pdf-drop-zone ${isDragging ? "dragging" : ""} ${pdfFile ? "has-file" : ""}`}
+                          onDrop={handlePdfDrop}
+                          onDragOver={handlePdfDragOver}
+                          onDragLeave={handlePdfDragLeave}
+                          onClick={() =>
+                            document.getElementById("pdf-file-input").click()
+                          }
+                        >
+                          <input
+                            id="pdf-file-input"
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            onChange={handlePdfFileSelect}
+                            style={{ display: "none" }}
+                          />
+                          <div className="drop-zone-content">
+                            {pdfFile ? (
+                              <>
+                                <FiFileText size={40} className="mb-2" />
+                                <h5 className="mb-1">{pdfFile.name}</h5>
+                                <p className="text-muted mb-0">
+                                  {(pdfFile.size / 1024).toFixed(2)} KB
+                                </p>
+                                <small className="text-muted">
+                                  לחץ לבחירת קובץ אחר
+                                </small>
+                              </>
+                            ) : (
+                              <>
+                                <FiFileText size={48} className="mb-3" />
+                                <h5 className="mb-2">גרור קובץ PDF לכאן</h5>
+                                <p className="text-muted mb-0">
+                                  או לחץ לבחירת קובץ
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="url"
+                          value={qrInputs.pdf}
+                          onChange={(e) =>
+                            handleInputChange("pdf", e.target.value)
+                          }
+                          placeholder="https://example.com/document.pdf"
+                          className="form-control form-control-lg"
+                        />
+                        <div className="form-text">
+                          הדבק כאן URL של קובץ PDF
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -1031,8 +1254,60 @@ function QrPage() {
                 )}
 
                 {activeTab === "shape" && (
-                  <div className="alert alert-light border">
-                    Shape customization is coming next.
+                  <div className="vstack gap-4">
+                    {/* Body Type Section */}
+                    <div className="qr-shape-section">
+                      <label className="form-label fw-semibold mb-3">
+                        BODY TYPE
+                      </label>
+                      <div className="row g-3">
+                        {bodyShapes.map((shape) => (
+                          <div className="col-4" key={shape.id}>
+                            <button
+                              type="button"
+                              className={`shape-btn ${dotsType === shape.id ? "selected" : ""}`}
+                              onClick={() => setDotsType(shape.id)}
+                              title={shape.name}
+                            >
+                              <div
+                                className={`shape-preview shape-${shape.id}`}
+                              ></div>
+                              <small className="shape-label">
+                                {shape.name}
+                              </small>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <hr />
+
+                    {/* Edges Section */}
+                    <div className="qr-shape-section">
+                      <label className="form-label fw-semibold mb-3">
+                        EDGES (CORNERS)
+                      </label>
+                      <div className="row g-3">
+                        {cornerShapes.map((shape) => (
+                          <div className="col-4" key={shape.id}>
+                            <button
+                              type="button"
+                              className={`shape-btn ${cornersType === shape.id ? "selected" : ""}`}
+                              onClick={() => setCornersType(shape.id)}
+                              title={shape.name}
+                            >
+                              <div
+                                className={`shape-preview corner-${shape.id}`}
+                              ></div>
+                              <small className="shape-label">
+                                {shape.name}
+                              </small>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -1093,19 +1368,53 @@ function QrPage() {
                       <div className="text-muted">Generating QR...</div>
                     </div>
                   )}
-                  {!loading && qrImage && (
-                    <img
-                      src={qrImage}
-                      alt="Generated QR Code"
-                      className="img-fluid qr-image"
-                    />
-                  )}
-                  {!loading && !qrImage && (
-                    <div className="text-center text-muted">
-                      <div className="display-6">QR</div>
-                      Start typing to generate a QR code.
-                    </div>
-                  )}
+                  {!loading &&
+                    qrType === "pdf" &&
+                    pdfInputMode === "file" &&
+                    pdfFile &&
+                    !qrInputs.pdf && (
+                      <div className="text-center" style={{ color: "#0a9396" }}>
+                        <FiFileText size={64} className="mb-3" />
+                        <h5 className="mb-3">קובץ נבחר בהצלחה!</h5>
+                        <div className="text-muted mb-2">
+                          <p className="mb-2">
+                            📤 העלה את הקובץ לשירות אחסון (Google Drive, Dropbox
+                            וכו')
+                          </p>
+                          <p className="mb-2">🔗 לחץ על "הדבקת URL" למעלה</p>
+                          <p className="mb-0">
+                            ✨ הדבק את הקישור ליצירת QR code
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  {!loading &&
+                    !(
+                      qrType === "pdf" &&
+                      pdfInputMode === "file" &&
+                      pdfFile &&
+                      !qrInputs.pdf
+                    ) &&
+                    qrImage && (
+                      <img
+                        src={qrImage}
+                        alt="Generated QR Code"
+                        className="img-fluid qr-image"
+                      />
+                    )}
+                  {!loading &&
+                    !(
+                      qrType === "pdf" &&
+                      pdfInputMode === "file" &&
+                      pdfFile &&
+                      !qrInputs.pdf
+                    ) &&
+                    !qrImage && (
+                      <div className="text-center text-muted">
+                        <div className="display-6">QR</div>
+                        Start typing to generate a QR code.
+                      </div>
+                    )}
                 </div>
 
                 <div className="row g-2">
