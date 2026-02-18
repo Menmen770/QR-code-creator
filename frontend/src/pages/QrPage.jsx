@@ -21,6 +21,19 @@ import {
   BsTiktok,
 } from "react-icons/bs";
 import logo from "../assets/logo.png";
+import edge1 from "../assets/edges/1.svg";
+import edge2 from "../assets/edges/2.svg";
+import edge3 from "../assets/edges/3.svg";
+import edge4 from "../assets/edges/4.svg";
+import edge5 from "../assets/edges/5.svg";
+import edge6 from "../assets/edges/6.svg";
+import edge7 from "../assets/edges/7.svg";
+import body1 from "../assets/body/1.svg";
+import body2 from "../assets/body/2.svg";
+import body3 from "../assets/body/3.svg";
+import body4 from "../assets/body/4.svg";
+import body5 from "../assets/body/5.svg";
+import body6 from "../assets/body/6.svg";
 
 function QrPage() {
   const [qrType, setQrType] = useState("url");
@@ -42,6 +55,28 @@ function QrPage() {
   const [pdfInputMode, setPdfInputMode] = useState("file"); // "file" or "url"
   const [dotsType, setDotsType] = useState("square"); // QR dots shape
   const [cornersType, setCornersType] = useState("square"); // QR corners shape
+  const [logoUrl, setLogoUrl] = useState(""); // Logo/image URL for QR center
+
+  // Map edge images to corner shapes
+  const edgeImages = {
+    1: edge1,
+    2: edge2,
+    3: edge3,
+    4: edge4,
+    5: edge5,
+    6: edge6,
+    7: edge7,
+  };
+
+  // Map body images to body shapes
+  const bodyImages = {
+    1: body1,
+    2: body2,
+    3: body3,
+    4: body4,
+    5: body5,
+    6: body6,
+  };
 
   // Background effects
   const bgEffects = [
@@ -78,7 +113,7 @@ function QrPage() {
     return gradients[effectId] || "#ffffff";
   };
 
-  // Shape options for QR customization
+  // Shape options for QR customization - All supported by qr-code-styling
   const bodyShapes = [
     { id: "square", name: "Square" },
     { id: "dots", name: "Dots" },
@@ -91,7 +126,11 @@ function QrPage() {
   const cornerShapes = [
     { id: "square", name: "Square" },
     { id: "dot", name: "Dot" },
+    { id: "rounded", name: "Rounded" },
     { id: "extra-rounded", name: "Extra Rounded" },
+    { id: "classy", name: "Classy" },
+    { id: "classy-rounded", name: "Classy Rounded" },
+    { id: "dots", name: "Dots" },
   ];
 
   // Preset colors for quick selection
@@ -302,6 +341,9 @@ function QrPage() {
         dotsType: dotsType,
         cornersType: cornersType,
       };
+      if (logoUrl) {
+        requestBody.image = logoUrl;
+      }
       console.log("Request body:", JSON.stringify(requestBody));
 
       const response = await fetch("http://localhost:5000/api/generate-qr", {
@@ -1257,63 +1299,97 @@ function QrPage() {
                   <div className="vstack gap-4">
                     {/* Body Type Section */}
                     <div className="qr-shape-section">
-                      <label className="form-label fw-semibold mb-3">
+                      <label className="form-label fw-semibold mb-4">
                         BODY TYPE
                       </label>
-                      <div className="row g-3">
-                        {bodyShapes.map((shape) => (
-                          <div className="col-4" key={shape.id}>
+                      <div className="d-flex flex-wrap gap-3">
+                        {bodyShapes.map((shape, index) => {
+                          const imageNum = index + 8;
+                          return (
                             <button
                               type="button"
-                              className={`shape-btn ${dotsType === shape.id ? "selected" : ""}`}
+                              className={`edge-select-btn ${dotsType === shape.id ? "selected" : ""}`}
                               onClick={() => setDotsType(shape.id)}
                               title={shape.name}
+                              key={shape.id}
                             >
-                              <div
-                                className={`shape-preview shape-${shape.id}`}
-                              ></div>
-                              <small className="shape-label">
-                                {shape.name}
-                              </small>
+                              <img
+                                src={bodyImages[index + 1]}
+                                alt={shape.name}
+                                className="edge-preview-img"
+                              />
                             </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <hr />
+                    <hr className="my-2" />
 
                     {/* Edges Section */}
                     <div className="qr-shape-section">
-                      <label className="form-label fw-semibold mb-3">
-                        EDGES (CORNERS)
+                      <label className="form-label fw-semibold mb-4">
+                        EDGES
                       </label>
-                      <div className="row g-3">
-                        {cornerShapes.map((shape) => (
-                          <div className="col-4" key={shape.id}>
+                      <div className="d-flex flex-wrap gap-3">
+                        {cornerShapes.map((shape, index) => {
+                          const imageNum = index + 1;
+                          return (
                             <button
                               type="button"
-                              className={`shape-btn ${cornersType === shape.id ? "selected" : ""}`}
+                              className={`edge-select-btn ${cornersType === shape.id ? "selected" : ""}`}
                               onClick={() => setCornersType(shape.id)}
                               title={shape.name}
+                              key={shape.id}
                             >
-                              <div
-                                className={`shape-preview corner-${shape.id}`}
-                              ></div>
-                              <small className="shape-label">
-                                {shape.name}
-                              </small>
+                              <img
+                                src={edgeImages[imageNum]}
+                                alt={shape.name}
+                                className="edge-preview-img"
+                              />
                             </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === "logo" && (
-                  <div className="alert alert-light border">
-                    Logo upload is coming next.
+                  <div className="vstack gap-4">
+                    <label className="form-label fw-semibold">LOGO URL</label>
+                    <input
+                      type="url"
+                      className="form-control"
+                      placeholder="https://example.com/logo.png"
+                      value={logoUrl}
+                      onChange={(e) => {
+                        console.log("Logo URL changed to:", e.target.value);
+                        setLogoUrl(e.target.value);
+                      }}
+                    />
+                    <small className="text-muted">
+                      Enter the URL of a PNG or JPG image to place in the center
+                      of the QR code. Recommended size: 100x100px to 200x200px
+                    </small>
+                    {logoUrl && (
+                      <div className="alert alert-info d-flex flex-column gap-2">
+                        <span className="fw-semibold">Preview:</span>
+                        <img
+                          src={logoUrl}
+                          alt="Logo preview"
+                          style={{
+                            maxWidth: "150px",
+                            maxHeight: "150px",
+                            borderRadius: "8px",
+                          }}
+                          onError={(e) => {
+                            console.error("Logo image failed to load");
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1378,13 +1454,11 @@ function QrPage() {
                         <h5 className="mb-3">קובץ נבחר בהצלחה!</h5>
                         <div className="text-muted mb-2">
                           <p className="mb-2">
-                            📤 העלה את הקובץ לשירות אחסון (Google Drive, Dropbox
+                            העלה את הקובץ לשירות אחסון (Google Drive, Dropbox
                             וכו')
                           </p>
-                          <p className="mb-2">🔗 לחץ על "הדבקת URL" למעלה</p>
-                          <p className="mb-0">
-                            ✨ הדבק את הקישור ליצירת QR code
-                          </p>
+                          <p className="mb-2"> לחץ על "הדבקת URL" למעלה</p>
+                          <p className="mb-0">הדבק את הקישור ליצירת QR code</p>
                         </div>
                       </div>
                     )}

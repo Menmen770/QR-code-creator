@@ -680,50 +680,139 @@
 .shape-btn {
   width: 100%;
   aspect-ratio: 1;
-  border: 2px solid #e8e8e8;
-  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
   background: #ffffff;
   cursor: pointer;
-  padding: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .shape-btn:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px) scale(1.02);
   border-color: #0a9396;
-  box-shadow: 0 4px 12px rgba(10, 147, 150, 0.15);
+  box-shadow: 0 6px 16px rgba(10, 147, 150, 0.2);
 }
 
 .shape-btn.selected {
-  border: 3px solid #0a9396;
+  border: 2px solid #0a9396;
   background: linear-gradient(
     135deg,
-    rgba(10, 147, 150, 0.05),
-    rgba(10, 147, 150, 0.02)
+    rgba(10, 147, 150, 0.08),
+    rgba(10, 147, 150, 0.03)
   );
-  box-shadow: 0 4px 12px rgba(10, 147, 150, 0.3);
+  box-shadow: 0 4px 12px rgba(10, 147, 150, 0.25);
+  position: relative;
+}
+
+.shape-btn.selected::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: #0a9396;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .shape-preview {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: #000000;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .shape-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #6b7280;
   text-align: center;
+  line-height: 1.2;
 }
 
 .shape-btn.selected .shape-label {
   color: #0a9396;
+  font-weight: 700;
+}
+
+.qr-shape-section {
+  padding: 16px 0;
+}
+
+/* Edge Selection Button Styles - Professional Elegant Design */
+.edge-select-btn {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.edge-select-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  border-color: #0a9396;
+  box-shadow: 0 6px 16px rgba(10, 147, 150, 0.18);
+}
+
+.edge-select-btn.selected {
+  border: 2px solid #0a9396;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 147, 150, 0.1),
+    rgba(10, 147, 150, 0.02)
+  );
+  box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.1),
+              0 4px 12px rgba(10, 147, 150, 0.25);
+}
+
+.edge-select-btn.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: #0a9396;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.edge-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 /* Body Shape Styles */
@@ -782,6 +871,50 @@
   border-radius: 50%;
 }
 
+.corner-rounded {
+  border-radius: 8px;
+}
+
 .corner-extra-rounded {
   border-radius: 16px;
+}
+
+.corner-classy {
+  border-radius: 0;
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+}
+
+.corner-classy-rounded {
+  border-radius: 10px;
+  clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
+  );
+}
+
+.corner-dots {
+  border-radius: 50%;
+  background:
+    radial-gradient(circle 30% at 30% 30%, #000 1px, #000 1px),
+    radial-gradient(circle 30% at 70% 30%, #000 1px, #000 1px),
+    radial-gradient(circle 30% at 30% 70%, #000 1px, #000 1px),
+    radial-gradient(circle 30% at 70% 70%, #000 1px, #000 1px);
+  background-size: 20px 20px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
 }

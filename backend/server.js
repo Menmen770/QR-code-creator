@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const QRCode = require("qrcode");
+const { QRCodeStyling } = require("qr-code-styling/lib/qr-code-styling.common.js");
+const nodeCanvas = require("canvas");
+const { JSDOM } = require("jsdom");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
@@ -97,9 +99,23 @@ app.post("/api/generate-qr", async (req, res) => {
     bgColor,
     dotsType = "square",
     cornersType = "square",
+    dotsGradient = null,
+    bgGradient = null,
+    image = null,
+    errorCorrectionLevel = "Q",
   } = req.body;
 
-  console.log("QR Request:", { text, color, bgColor, dotsType, cornersType });
+  console.log("QR Request:", { 
+    text, 
+    color, 
+    bgColor, 
+    dotsType, 
+    cornersType,
+    dotsGradient: !!dotsGradient,
+    bgGradient: !!bgGradient,
+    image: !!image,
+    errorCorrectionLevel,
+  });
 
   if (!text) {
     console.log("Error: Text is empty");
@@ -107,23 +123,76 @@ app.post("/api/generate-qr", async (req, res) => {
   }
 
   try {
-    const qrImage = await QRCode.toDataURL(text, {
-      color: {
-        dark: color || "#000000",
-        light: bgColor === "transparent" ? "#00000000" : bgColor || "#FFFFFF",
-      },
-      width: 400,
-      margin: 2,
-    });
+    // Build dotsOptions
+    const dotsOptions = {
+      color: color || "#000000",
+      type: dotsType,
+    };
+    if (dotsGradient) {
+      dotsOptions.gradient = dotsGradient;
+    }
 
-    console.log("QR Code generated successfully");
-    // Note: dotsType and cornersType are accepted but not applied by basic qrcode library
-    // TODO: Implement advanced shape support with alternative library
+    // Build backgroundOptions
+    const backgroundOptions = {
+      color: bgColor === "transparent" ? "rgba(0,0,0,0)" : bgColor || "#FFFFFF",
+    };
+    if (bgGradient) {
+      backgroundOptions.gradient = bgGradient;
+    }
+
+    // Build QR options object
+    const options = {
+      width: 400,
+      height: 400,
+      type: "png",
+      data: text,
+      margin: 10,
+      jsdom: JSDOM,
+      nodeCanvas: nodeCanvas,
+      qrOptions: {
+        typeNumber: 0,
+        mode: "Byte",
+        errorCorrectionLevel: errorCorrectionLevel,
+      },
+      dotsOptions: dotsOptions,
+      backgroundOptions: backgroundOptions,
+      cornersSquareOptions: {
+        color: color || "#000000",
+        type: cornersType,
+      },
+      cornersDotOptions: {
+        color: color || "#000000",
+        type: cornersType,
+      },
+    };
+
+    // Add image if provided
+    if (image) {
+      options.image = image;
+      options.imageOptions = {
+        hideBackgroundDots: true,
+        imageSize: 0.4,
+        margin: 20,
+        crossOrigin: "anonymous",
+      };
+    }
+
+    console.log("QRCodeStyling options created with all parameters");
+    const qrCode = new QRCodeStyling(options);
+
+    console.log("QRCodeStyling instance created with dotsType:", dotsType);
+    const buffer = await qrCode.getRawData("png");
+    console.log("PNG buffer generated, size:", buffer.length, "bytes");
+
+    const base64 = buffer.toString("base64");
+    const qrImage = `data:image/png;base64,${base64}`;
+
+    console.log("QR Code generated successfully with all options applied");
     res.json({ qrImage });
   } catch (err) {
     console.error("QR Generation Error:", err.message);
-    console.error("Stack:", err.stack);
-    res.status(500).json({ error: "Failed to generate QR code" });
+    console.error("Full error:", err);
+    res.status(500).json({ error: "Failed to generate QR code", details: err.message });
   }
 });
 
