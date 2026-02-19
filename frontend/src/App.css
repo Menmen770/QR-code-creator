@@ -622,6 +622,9 @@
   transition: all 0.3s ease;
   cursor: pointer;
   text-align: center;
+  position: relative;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .pdf-drop-zone:hover {
@@ -670,6 +673,81 @@
 .pdf-drop-zone svg {
   color: inherit;
   opacity: 0.7;
+}
+
+.document-drop-zone {
+  background: #f7fbfb;
+  border: 2px dashed rgba(10, 147, 150, 0.35);
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-shadow: 0 10px 30px -18px rgba(10, 147, 150, 0.45);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.document-drop-zone:hover {
+  border-color: #0a9396;
+  background: #f2fbfb;
+}
+
+.document-drop-zone .document-upload-design {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #1f2937;
+}
+
+.document-drop-zone .document-upload-icon {
+  height: 42px;
+  fill: #0a9396;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.delete-file-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.delete-file-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.drop-zone-content {
+  position: relative;
+}
+
+.document-drop-zone .document-browse-button {
+  background: #0a9396;
+  padding: 6px 16px;
+  border-radius: 10px;
+  color: #ffffff;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+
+.document-drop-zone:hover .document-browse-button {
+  background: #087b7d;
+}
+
+.document-drop-zone.has-file .document-upload-icon {
+  display: none;
 }
 
 /* QR Shape Customization */
@@ -786,12 +864,13 @@
     rgba(10, 147, 150, 0.1),
     rgba(10, 147, 150, 0.02)
   );
-  box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.1),
-              0 4px 12px rgba(10, 147, 150, 0.25);
+  box-shadow:
+    0 0 0 3px rgba(10, 147, 150, 0.1),
+    0 4px 12px rgba(10, 147, 150, 0.25);
 }
 
 .edge-select-btn.selected::after {
-  content: '✓';
+  content: "✓";
   position: absolute;
   top: 4px;
   right: 4px;
@@ -917,4 +996,75 @@
   background-size: 20px 20px;
   background-position: 0 0;
   background-repeat: no-repeat;
+}
+
+.back-to-top-button {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #0a9396;
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px rgba(10, 147, 150, 0.25);
+  cursor: pointer;
+  transition-duration: 0.3s;
+  overflow: hidden;
+  z-index: 1200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(16px);
+}
+
+.back-to-top-button.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.back-to-top-icon {
+  width: 12px;
+  transition-duration: 0.3s;
+}
+
+.back-to-top-icon path {
+  fill: #ffffff;
+}
+
+.back-to-top-button:hover {
+  width: 140px;
+  border-radius: 50px;
+  background-color: #087b7d;
+}
+
+.back-to-top-button:hover .back-to-top-icon {
+  transform: translateY(-200%);
+}
+
+.back-to-top-button::before {
+  position: absolute;
+  bottom: -20px;
+  content: "Back to Top";
+  color: #ffffff;
+  font-size: 0;
+  white-space: nowrap;
+}
+
+.back-to-top-button:hover::before {
+  font-size: 13px;
+  opacity: 1;
+  bottom: unset;
+  transition-duration: 0.3s;
+}
+
+@media (max-width: 768px) {
+  .back-to-top-button {
+    right: 18px;
+    bottom: 18px;
+  }
 }

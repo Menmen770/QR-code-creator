@@ -1,0 +1,1 @@
+export { useQrGenerator } from "./useQrGenerator";

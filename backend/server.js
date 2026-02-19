@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-const { QRCodeStyling } = require("qr-code-styling/lib/qr-code-styling.common.js");
+const {
+  QRCodeStyling,
+} = require("qr-code-styling/lib/qr-code-styling.common.js");
 const nodeCanvas = require("canvas");
 const { JSDOM } = require("jsdom");
 const mongoose = require("mongoose");
@@ -38,6 +40,65 @@ const isEmailValid = (email) => {
 const isPhoneValid = (phone) => {
   if (typeof phone !== "string") return false;
   return /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
+};
+
+const addLogoWithCutout = async (
+  qrBuffer,
+  imageSource,
+  logoShape = "square",
+) => {
+  const qrImage = await nodeCanvas.loadImage(qrBuffer);
+
+  const canvas = nodeCanvas.createCanvas(qrImage.width, qrImage.height);
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(qrImage, 0, 0);
+
+  const centerX = qrImage.width / 2;
+  const centerY = qrImage.height / 2;
+  const cutoutSize = Math.min(qrImage.width, qrImage.height) * 0.38;
+  const logoSize = cutoutSize * 0.68;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  if (logoShape === "circle") {
+    ctx.arc(centerX, centerY, cutoutSize / 2, 0, Math.PI * 2);
+  } else {
+    ctx.rect(
+      centerX - cutoutSize / 2,
+      centerY - cutoutSize / 2,
+      cutoutSize,
+      cutoutSize,
+    );
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  try {
+    const logoImage = await nodeCanvas.loadImage(imageSource);
+    const sourceSize = Math.min(logoImage.width, logoImage.height);
+    const sourceX = (logoImage.width - sourceSize) / 2;
+    const sourceY = (logoImage.height - sourceSize) / 2;
+
+    ctx.drawImage(
+      logoImage,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
+      centerX - logoSize / 2,
+      centerY - logoSize / 2,
+      logoSize,
+      logoSize,
+    );
+  } catch (logoError) {
+    console.warn(
+      "Logo image load failed, keeping cutout only:",
+      logoError.message,
+    );
+  }
+
+  return canvas.toBuffer("image/png");
 };
 
 if (process.env.MONGO_URI) {
@@ -102,18 +163,20 @@ app.post("/api/generate-qr", async (req, res) => {
     dotsGradient = null,
     bgGradient = null,
     image = null,
+    logoShape = "square",
     errorCorrectionLevel = "Q",
   } = req.body;
 
-  console.log("QR Request:", { 
-    text, 
-    color, 
-    bgColor, 
-    dotsType, 
+  console.log("QR Request:", {
+    text,
+    color,
+    bgColor,
+    dotsType,
     cornersType,
     dotsGradient: !!dotsGradient,
     bgGradient: !!bgGradient,
     image: !!image,
+    logoShape,
     errorCorrectionLevel,
   });
 
@@ -166,25 +229,20 @@ app.post("/api/generate-qr", async (req, res) => {
       },
     };
 
-    // Add image if provided
-    if (image) {
-      options.image = image;
-      options.imageOptions = {
-        hideBackgroundDots: true,
-        imageSize: 0.4,
-        margin: 20,
-        crossOrigin: "anonymous",
-      };
-    }
-
     console.log("QRCodeStyling options created with all parameters");
     const qrCode = new QRCodeStyling(options);
 
     console.log("QRCodeStyling instance created with dotsType:", dotsType);
-    const buffer = await qrCode.getRawData("png");
-    console.log("PNG buffer generated, size:", buffer.length, "bytes");
+    const qrBuffer = await qrCode.getRawData("png");
+    let finalBuffer = qrBuffer;
 
-    const base64 = buffer.toString("base64");
+    if (image) {
+      finalBuffer = await addLogoWithCutout(qrBuffer, image, logoShape);
+    }
+
+    console.log("PNG buffer generated, size:", finalBuffer.length, "bytes");
+
+    const base64 = finalBuffer.toString("base64");
     const qrImage = `data:image/png;base64,${base64}`;
 
     console.log("QR Code generated successfully with all options applied");
@@ -192,7 +250,9 @@ app.post("/api/generate-qr", async (req, res) => {
   } catch (err) {
     console.error("QR Generation Error:", err.message);
     console.error("Full error:", err);
-    res.status(500).json({ error: "Failed to generate QR code", details: err.message });
+    res
+      .status(500)
+      .json({ error: "Failed to generate QR code", details: err.message });
   }
 });
 

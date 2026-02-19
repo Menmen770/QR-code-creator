@@ -1,26 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FiLink,
   FiFileText,
-  FiMail,
-  FiPhone,
   FiChevronDown,
-  FiWifi,
-  FiUser,
-  FiMessageCircle,
   FiEdit2,
+  FiLink,
+  FiX,
 } from "react-icons/fi";
+import { useQrGenerator } from "../hooks";
 import {
-  BsChat,
-  BsFacebook,
-  BsInstagram,
-  BsTwitterX,
-  BsLinkedin,
-  BsYoutube,
-  BsTiktok,
-} from "react-icons/bs";
-import logo from "../assets/logo.png";
+  BG_EFFECTS,
+  PRESET_COLORS,
+  BODY_SHAPES,
+  CORNER_SHAPES,
+  QR_TYPES_MAIN,
+  QR_TYPES_MORE,
+} from "../utils/qrConstants";
+import logo from "../assets/logo-full.png";
 import edge1 from "../assets/edges/1.svg";
 import edge2 from "../assets/edges/2.svg";
 import edge3 from "../assets/edges/3.svg";
@@ -36,29 +32,70 @@ import body5 from "../assets/body/5.svg";
 import body6 from "../assets/body/6.svg";
 
 function QrPage() {
-  const [qrType, setQrType] = useState("url");
-  const [qrValue, setQrValue] = useState("https://example.com");
-  const [bgColor, setBgColor] = useState("#ffffff");
-  const [fgColor, setFgColor] = useState("#000000");
-  const [qrImage, setQrImage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const qr = useQrGenerator();
+
+  const {
+    qrType,
+    bgColor,
+    setBgColor,
+    fgColor,
+    setFgColor,
+    qrImage,
+    loading,
+    error,
+    bgColorMode,
+    setBgColorMode,
+    bgEffect,
+    setBgEffect,
+    pdfFile,
+    setPdfFile,
+    isDragging,
+    pdfInputMode,
+    setPdfInputMode,
+    dotsType,
+    setDotsType,
+    cornersType,
+    setCornersType,
+    logoUrl,
+    setLogoUrl,
+    logoFile,
+    setLogoFile,
+    isLogoDragging,
+    logoInputMode,
+    setLogoInputMode,
+    logoShape,
+    setLogoShape,
+    qrInputs,
+    handleQRTypeChange,
+    handleInputChange,
+    handlePdfDrop,
+    handlePdfDragOver,
+    handlePdfDragLeave,
+    handlePdfFileSelect,
+    handleLogoDrop,
+    handleLogoDragOver,
+    handleLogoDragLeave,
+    handleLogoFileSelect,
+    getEffectBackground,
+    downloadQR,
+  } = qr;
+
   const [activeTab, setActiveTab] = useState("color");
-  const [scrollPosition, setScrollPosition] = useState(0);
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [fgColorMode, setFgColorMode] = useState("solid"); // "solid" or "effect"
-  const [fgEffect, setFgEffect] = useState("none");
-  const [bgColorMode, setBgColorMode] = useState("solid"); // "none", "solid", or "effect"
-  const [bgEffect, setBgEffect] = useState("none");
-  const [pdfFile, setPdfFile] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [pdfInputMode, setPdfInputMode] = useState("file"); // "file" or "url"
-  const [dotsType, setDotsType] = useState("square"); // QR dots shape
-  const [cornersType, setCornersType] = useState("square"); // QR corners shape
-  const [logoUrl, setLogoUrl] = useState(""); // Logo/image URL for QR center
-  const [logoFile, setLogoFile] = useState(null); // Logo file object
-  const [isLogoDragging, setIsLogoDragging] = useState(false); // Logo drag state
-  const [logoInputMode, setLogoInputMode] = useState("file"); // "file" or "url"
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Map edge images to corner shapes
   const edgeImages = {
@@ -81,492 +118,12 @@ function QrPage() {
     6: body6,
   };
 
-  // Background effects
-  const bgEffects = [
-    { id: "none", name: "Solid" },
-    { id: "sunset-silk", name: "Sunset Silk" },
-    { id: "warm-terracotta", name: "Warm Terracotta" },
-    { id: "classic-peach", name: "Classic Peach" },
-    { id: "golden-hour", name: "Golden Hour" },
-    { id: "soft-rose", name: "Soft Rose" },
-    { id: "desert-sand", name: "Desert Sand" },
-    { id: "ocean-breeze", name: "Ocean Breeze" },
-    { id: "purple-dream", name: "Purple Dream" },
-    { id: "mint-fresh", name: "Mint Fresh" },
-    { id: "coral-reef", name: "Coral Reef" },
-    { id: "lavender-mist", name: "Lavender Mist" },
-  ];
-
-  // Get gradient background for effect button
-  const getEffectBackground = (effectId) => {
-    const gradients = {
-      none: "#ffffff",
-      "sunset-silk": "linear-gradient(135deg, #FF512F 0%, #DD2476 100%)",
-      "warm-terracotta": "linear-gradient(135deg, #e5976e 0%, #7f4122 100%)",
-      "classic-peach": "linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%)",
-      "golden-hour": "linear-gradient(135deg, #F2994A 0%, #F2C94C 100%)",
-      "soft-rose": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      "desert-sand": "linear-gradient(135deg, #cc947c 0%, #8b5a44 100%)",
-      "ocean-breeze": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      "purple-dream": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-      "mint-fresh": "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
-      "coral-reef": "linear-gradient(135deg, #ff9a56 0%, #ff6a95 100%)",
-      "lavender-mist": "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
-    };
-    return gradients[effectId] || "#ffffff";
-  };
-
-  // Shape options for QR customization - All supported by qr-code-styling
-  const bodyShapes = [
-    { id: "square", name: "Square" },
-    { id: "dots", name: "Dots" },
-    { id: "rounded", name: "Rounded" },
-    { id: "extra-rounded", name: "Extra Rounded" },
-    { id: "classy", name: "Classy" },
-    { id: "classy-rounded", name: "Classy Rounded" },
-  ];
-
-  const cornerShapes = [
-    { id: "square", name: "Square" },
-    { id: "dot", name: "Dot" },
-    { id: "rounded", name: "Rounded" },
-    { id: "extra-rounded", name: "Extra Rounded" },
-    { id: "classy", name: "Classy" },
-    { id: "classy-rounded", name: "Classy Rounded" },
-    { id: "dots", name: "Dots" },
-  ];
-
-  // Preset colors for quick selection
-  const presetColors = [
-    { name: "Black", hex: "#000000" },
-    { name: "Navy", hex: "#001f3f" },
-    { name: "Teal", hex: "#0a9396" },
-    { name: "Green", hex: "#00a651" },
-    { name: "Purple", hex: "#7c3aed" },
-    { name: "Red", hex: "#dc2626" },
-    { name: "Gray", hex: "#6b7280" },
-    { name: "Orange", hex: "#f97316" },
-    { name: "Blue", hex: "#3b82f6" },
-    { name: "Cyan", hex: "#06b6d4" },
-    { name: "Pink", hex: "#ec4899" },
-  ];
-
-  // QR Type options - Main
-  const qrTypesMain = [
-    { value: "url", label: "Website", icon: FiLink },
-    { value: "pdf", label: "PDF", icon: FiFileText },
-    { value: "email", label: "Email", icon: FiMail },
-    { value: "contact", label: "VCard", icon: FiUser },
-    { value: "whatsapp", label: "WhatsApp", icon: BsChat },
-    { value: "phone", label: "Phone", icon: FiPhone },
-    { value: "sms", label: "SMS", icon: FiMessageCircle },
-  ];
-
-  // QR Type options - More
-  const qrTypesMore = [
-    { value: "wifi", label: "WiFi", icon: FiWifi },
-    { value: "facebook", label: "Facebook", icon: BsFacebook },
-    { value: "instagram", label: "Instagram", icon: BsInstagram },
-    { value: "twitter", label: "Twitter/X", icon: BsTwitterX },
-    { value: "linkedin", label: "LinkedIn", icon: BsLinkedin },
-    { value: "youtube", label: "YouTube", icon: BsYoutube },
-    { value: "tiktok", label: "TikTok", icon: BsTiktok },
-  ];
-
-  const qrTypes = [...qrTypesMain, ...qrTypesMore];
-
-  // QR Type specific inputs
-  const [qrInputs, setQrInputs] = useState({
-    url: "https://example.com",
-    pdf: "",
-    whatsapp: { phone: "+972", message: "" },
-    email: { email: "", subject: "", message: "" },
-    phone: "+972",
-    sms: { phone: "+972", message: "" },
-    wifi: { ssid: "Network", password: "", security: "WPA" },
-    contact: { name: "", phone: "+972", email: "" },
-    facebook: "username",
-    instagram: "username",
-    twitter: "username",
-    linkedin: "username",
-    youtube: "username",
-    tiktok: "username",
-  });
-
-  const buildQRValue = (type, inputs) => {
-    switch (type) {
-      case "url":
-        return inputs.url;
-      case "pdf":
-        return inputs.pdf;
-      case "whatsapp":
-        return `https://wa.me/${inputs.whatsapp.phone.replace(/\D/g, "")}?text=${encodeURIComponent(inputs.whatsapp.message)}`;
-      case "email":
-        const emailParams = new URLSearchParams();
-        if (inputs.email.subject)
-          emailParams.append("subject", inputs.email.subject);
-        if (inputs.email.message)
-          emailParams.append("body", inputs.email.message);
-        return `mailto:${inputs.email.email}${emailParams.toString() ? "?" + emailParams.toString() : ""}`;
-      case "phone":
-        return `tel:${inputs.phone}`;
-      case "sms":
-        return `sms:${inputs.sms.phone}?body=${encodeURIComponent(inputs.sms.message)}`;
-      case "wifi":
-        return `WIFI:T:${inputs.wifi.security};S:${inputs.wifi.ssid};P:${inputs.wifi.password};;`;
-      case "contact":
-        return `BEGIN:VCARD\nVERSION:3.0\nFN:${inputs.contact.name}\nTEL:${inputs.contact.phone}\nEMAIL:${inputs.contact.email}\nEND:VCARD`;
-      case "facebook":
-        return `https://facebook.com/${inputs.facebook}`;
-      case "instagram":
-        return `https://instagram.com/${inputs.instagram}`;
-      case "twitter":
-        return `https://twitter.com/${inputs.twitter}`;
-      case "linkedin":
-        return `https://linkedin.com/in/${inputs.linkedin}`;
-      case "youtube":
-        return `https://youtube.com/@${inputs.youtube}`;
-      case "tiktok":
-        return `https://tiktok.com/@${inputs.tiktok}`;
-      default:
-        return inputs.url;
-    }
-  };
-
-  const handleQRTypeChange = (newType) => {
-    console.log("QR Type changed from", qrType, "to", newType);
-    setQrType(newType);
-    const newValue = buildQRValue(newType, qrInputs);
-    console.log("New QR value after type change:", newValue);
-    setQrValue(newValue);
-  };
-
-  const handleInputChange = (path, value) => {
-    console.log("Input changed - Path:", path, "Value:", value);
-    const newInputs = JSON.parse(JSON.stringify(qrInputs));
-    const keys = path.split(".");
-    let obj = newInputs;
-    for (let i = 0; i < keys.length - 1; i++) {
-      obj = obj[keys[i]];
-    }
-    obj[keys[keys.length - 1]] = value;
-    setQrInputs(newInputs);
-    const newValue = buildQRValue(qrType, newInputs);
-    console.log("New QR value after input change:", newValue);
-    setQrValue(newValue);
-  };
-
-  const handlePdfDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    console.log("PDF dropped:", file?.name, "Type:", file?.type);
-    if (file && file.type === "application/pdf") {
-      console.log(
-        "Valid PDF file. Setting pdfFile state. Size:",
-        file.size,
-        "bytes",
-      );
-      setPdfFile(file);
-      console.log(
-        "NOTE: qrInputs.pdf remains empty until user switches to URL mode",
-      );
-    } else {
-      console.log("INVALID: File is not a PDF or no file dropped");
-    }
-  };
-
-  const handlePdfDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handlePdfDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handlePdfFileSelect = (e) => {
-    const file = e.target.files[0];
-    console.log("PDF file selected:", file?.name, "Type:", file?.type);
-    if (file && file.type === "application/pdf") {
-      console.log(
-        "Valid PDF file. Setting pdfFile state. Size:",
-        file.size,
-        "bytes",
-      );
-      setPdfFile(file);
-      console.log(
-        "NOTE: qrInputs.pdf remains empty until user switches to URL mode",
-      );
-    } else {
-      console.log("INVALID: File is not a PDF or no file selected");
-    }
-  };
-
-  const handleLogoDrop = (e) => {
-    e.preventDefault();
-    setIsLogoDragging(false);
-    const file = e.dataTransfer.files[0];
-    console.log("Logo dropped:", file?.name, "Type:", file?.type);
-    if (file && file.type.startsWith("image/")) {
-      console.log("Valid image file. Size:", file.size, "bytes");
-      setLogoFile(file);
-      // Convert to data URL for preview and API
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setLogoUrl(event.target.result);
-        console.log("Logo converted to data URL");
-      };
-      reader.readAsDataURL(file);
-    } else {
-      console.log("INVALID: File is not an image or no file dropped");
-    }
-  };
-
-  const handleLogoDragOver = (e) => {
-    e.preventDefault();
-    setIsLogoDragging(true);
-  };
-
-  const handleLogoDragLeave = (e) => {
-    e.preventDefault();
-    setIsLogoDragging(false);
-  };
-
-  const handleLogoFileSelect = (e) => {
-    const file = e.target.files[0];
-    console.log("Logo file selected:", file?.name, "Type:", file?.type);
-    if (file && file.type.startsWith("image/")) {
-      console.log("Valid image file. Size:", file.size, "bytes");
-      setLogoFile(file);
-      // Convert to data URL for preview and API
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setLogoUrl(event.target.result);
-        console.log("Logo converted to data URL");
-      };
-      reader.readAsDataURL(file);
-    } else {
-      console.log("INVALID: File is not an image or no file selected");
-    }
-  };
-
-  const generateQR = async (text, fg, bg) => {
-    console.log("=== START QR GENERATION ===");
-    console.log("Input parameters:", {
-      text: text,
-      textLength: text?.length,
-      fgColor: fg,
-      bgColor: bg,
-      bgColorMode: bgColorMode,
-      bgEffect: bgEffect,
-      qrType: qrType,
-      dotsType: dotsType,
-      cornersType: cornersType,
-    });
-
-    if (!text.trim()) {
-      console.log("SKIP REASON: Text is empty or whitespace only");
-      setQrImage("");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const bgForAPI =
-        bgColorMode === "effect" || bgColorMode === "none" ? "transparent" : bg;
-
-      console.log("Preparing API request...");
-      console.log("Background color for API:", bgForAPI);
-      console.log("Dots type:", dotsType);
-      console.log("Corners type:", cornersType);
-      console.log("API endpoint: http://localhost:5000/api/generate-qr");
-
-      const requestBody = {
-        text,
-        color: fg,
-        bgColor: bgForAPI,
-        dotsType: dotsType,
-        cornersType: cornersType,
-      };
-      if (logoUrl) {
-        requestBody.image = logoUrl;
-      }
-      console.log("Request body:", JSON.stringify(requestBody));
-
-      const response = await fetch("http://localhost:5000/api/generate-qr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log("Response received. Status:", response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log("ERROR: Response not OK. Status:", response.status);
-        console.log("Error details:", errorText);
-        throw new Error(`Server returned ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("SUCCESS: QR code generated");
-      console.log("Image data length:", data.qrImage?.length || 0);
-      setQrImage(data.qrImage);
-      console.log("=== END QR GENERATION (SUCCESS) ===");
-    } catch (err) {
-      console.log("=== QR GENERATION FAILED ===");
-      console.log("Error type:", err.name);
-      console.log("Error message:", err.message);
-      console.log("Full error:", err);
-      setError("Failed to generate QR code");
-      setQrImage("");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    console.log("--- useEffect TRIGGERED ---");
-    console.log("Current state:", {
-      qrType: qrType,
-      pdfInputMode: pdfInputMode,
-      pdfHasUrl: !!qrInputs.pdf,
-      qrValue: qrValue,
-      qrValueLength: qrValue?.length,
-    });
-
-    const timeoutId = setTimeout(() => {
-      console.log("Timeout expired (400ms). Checking if should generate QR...");
-
-      // Don't generate QR if we're in PDF file mode without a URL
-      if (qrType === "pdf" && pdfInputMode === "file" && !qrInputs.pdf) {
-        console.log("SKIP: PDF in file mode without URL");
-        console.log(
-          "Details: qrType=" +
-            qrType +
-            ", pdfInputMode=" +
-            pdfInputMode +
-            ", pdf url empty=" +
-            !qrInputs.pdf,
-        );
-        setQrImage("");
-        return;
-      }
-
-      console.log("Proceeding to generate QR...");
-      generateQR(qrValue, fgColor, bgColor);
-    }, 400);
-
-    return () => {
-      console.log("useEffect cleanup - clearing timeout");
-      clearTimeout(timeoutId);
-    };
-  }, [
-    qrValue,
-    fgColor,
-    bgColor,
-    bgColorMode,
-    bgEffect,
-    qrType,
-    pdfInputMode,
-    qrInputs.pdf,
-    dotsType,
-    cornersType,
-  ]);
-
-  // Initial QR generation on mount
-  useEffect(() => {
-    console.log("=== COMPONENT MOUNTED ===");
-    console.log("Initial values:", {
-      qrValue: qrValue,
-      fgColor: fgColor,
-      bgColor: bgColor,
-      qrType: qrType,
-    });
-    console.log("Generating initial QR code...");
-    generateQR(qrValue, fgColor, bgColor);
-  }, []);
-
-  const downloadQR = (format) => {
-    if (!qrImage) return;
-
-    // Create canvas to add background
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-
-    img.onload = () => {
-      // Set canvas size to match QR image
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      // Draw background
-      if (bgColorMode === "none") {
-        // Transparent background - just draw QR
-        ctx.drawImage(img, 0, 0);
-      } else if (bgColorMode === "solid") {
-        // Solid color background
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-      } else if (bgColorMode === "effect" && bgEffect !== "none") {
-        // Gradient background
-        const gradientData = getEffectBackground(bgEffect);
-        
-        // Parse gradient string to extract colors and angles
-        const gradientMatch = gradientData.match(/linear-gradient\((\d+)deg,\s*([^)]+)\)/);
-        if (gradientMatch) {
-          const angle = parseInt(gradientMatch[1]);
-          const colorStops = gradientMatch[2].split(/,\s*(?![^()]*\))/);
-          
-          // Convert angle to canvas gradient coordinates
-          const angleRad = (angle - 90) * (Math.PI / 180);
-          const x0 = canvas.width / 2 - Math.cos(angleRad) * canvas.width / 2;
-          const y0 = canvas.height / 2 - Math.sin(angleRad) * canvas.height / 2;
-          const x1 = canvas.width / 2 + Math.cos(angleRad) * canvas.width / 2;
-          const y1 = canvas.height / 2 + Math.sin(angleRad) * canvas.height / 2;
-          
-          const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
-          
-          // Add color stops
-          colorStops.forEach((stop) => {
-            const match = stop.match(/([#\w]+)\s+(\d+)%/);
-            if (match) {
-              const color = match[1];
-              const position = parseInt(match[2]) / 100;
-              gradient.addColorStop(position, color);
-            }
-          });
-          
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-        
-        ctx.drawImage(img, 0, 0);
-      } else {
-        // Default: just draw QR
-        ctx.drawImage(img, 0, 0);
-      }
-
-      // Convert canvas to blob and download
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `qr-code.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, `image/${format}`);
-    };
-
-    img.src = qrImage;
-  };
+  const bgEffects = BG_EFFECTS;
+  const presetColors = PRESET_COLORS;
+  const bodyShapes = BODY_SHAPES;
+  const cornerShapes = CORNER_SHAPES;
+  const qrTypesMain = QR_TYPES_MAIN;
+  const qrTypesMore = QR_TYPES_MORE;
 
   const tabClass = (tabName) =>
     `nav-link ${activeTab === tabName ? "active" : ""}`;
@@ -695,7 +252,7 @@ function QrPage() {
                     {pdfInputMode === "file" ? (
                       <>
                         <div
-                          className={`pdf-drop-zone ${isDragging ? "dragging" : ""} ${pdfFile ? "has-file" : ""}`}
+                          className={`pdf-drop-zone document-drop-zone ${isDragging ? "dragging" : ""} ${pdfFile ? "has-file" : ""}`}
                           onDrop={handlePdfDrop}
                           onDragOver={handlePdfDragOver}
                           onDragLeave={handlePdfDragLeave}
@@ -710,25 +267,42 @@ function QrPage() {
                             onChange={handlePdfFileSelect}
                             style={{ display: "none" }}
                           />
-                          <div className="drop-zone-content">
+                          <div className="drop-zone-content document-upload-design">
                             {pdfFile ? (
                               <>
-                                <FiFileText size={40} className="mb-2" />
-                                <h5 className="mb-1">{pdfFile.name}</h5>
-                                <p className="text-muted mb-0">
+                                <button
+                                  className="delete-file-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPdfFile(null);
+                                    handleInputChange("pdf", "");
+                                  }}
+                                  title="מחק קובץ"
+                                >
+                                  <FiX size={18} />
+                                </button>
+                                <FiFileText size={36} className="mb-2" />
+                                <h6 className="mb-1">{pdfFile.name}</h6>
+                                <p className="text-muted mb-0 small">
                                   {(pdfFile.size / 1024).toFixed(2)} KB
                                 </p>
-                                <small className="text-muted">
-                                  לחץ לבחירת קובץ אחר
-                                </small>
                               </>
                             ) : (
                               <>
-                                <FiFileText size={48} className="mb-3" />
-                                <h5 className="mb-2">גרור קובץ PDF לכאן</h5>
-                                <p className="text-muted mb-0">
-                                  או לחץ לבחירת קובץ
+                                <svg
+                                  className="document-upload-icon"
+                                  viewBox="0 0 640 512"
+                                  aria-hidden="true"
+                                >
+                                  <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z" />
+                                </svg>
+                                <p className="mb-1 fw-semibold">
+                                  Drag and Drop
                                 </p>
+                                <p className="mb-2 text-muted">or</p>
+                                <span className="document-browse-button">
+                                  Browse file
+                                </span>
                               </>
                             )}
                           </div>
@@ -1493,10 +1067,27 @@ function QrPage() {
                       </button>
                     </div>
 
+                    <div className="d-flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        className={`btn ${logoShape === "square" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setLogoShape("square")}
+                      >
+                        חיתוך מרובע
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${logoShape === "circle" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setLogoShape("circle")}
+                      >
+                        חיתוך עגול
+                      </button>
+                    </div>
+
                     {logoInputMode === "file" ? (
                       <>
                         <div
-                          className={`pdf-drop-zone ${isLogoDragging ? "dragging" : ""} ${logoFile ? "has-file" : ""}`}
+                          className={`pdf-drop-zone document-drop-zone ${isLogoDragging ? "dragging" : ""} ${logoFile ? "has-file" : ""}`}
                           onDrop={handleLogoDrop}
                           onDragOver={handleLogoDragOver}
                           onDragLeave={handleLogoDragLeave}
@@ -1511,37 +1102,42 @@ function QrPage() {
                             onChange={handleLogoFileSelect}
                             style={{ display: "none" }}
                           />
-                          <div className="drop-zone-content">
+                          <div className="drop-zone-content document-upload-design">
                             {logoFile ? (
                               <>
-                                <img
-                                  src={logoUrl}
-                                  alt="Logo preview"
-                                  style={{
-                                    maxWidth: "150px",
-                                    maxHeight: "150px",
-                                    borderRadius: "8px",
-                                    marginBottom: "8px",
+                                <button
+                                  className="delete-file-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLogoFile(null);
+                                    setLogoUrl("");
                                   }}
-                                />
-                                <h5 className="mb-1">{logoFile.name}</h5>
-                                <p className="text-muted mb-0">
+                                  title="מחק תמונה"
+                                >
+                                  <FiX size={18} />
+                                </button>
+                                <FiFileText size={36} className="mb-2" />
+                                <h6 className="mb-1">{logoFile.name}</h6>
+                                <p className="text-muted mb-0 small">
                                   {(logoFile.size / 1024).toFixed(2)} KB
                                 </p>
-                                <small className="text-muted">
-                                  לחץ לבחירת תמונה אחרת
-                                </small>
                               </>
                             ) : (
                               <>
-                                <FiFileText size={48} className="mb-3" />
-                                <h5 className="mb-2">גרור תמונה לכאן</h5>
-                                <p className="text-muted mb-0">
-                                  או לחץ לבחירת קובץ
+                                <svg
+                                  className="document-upload-icon"
+                                  viewBox="0 0 640 512"
+                                  aria-hidden="true"
+                                >
+                                  <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z" />
+                                </svg>
+                                <p className="mb-1 fw-semibold">
+                                  Drag and Drop
                                 </p>
-                                <small className="text-muted">
-                                  PNG, JPG או SVG
-                                </small>
+                                <p className="mb-2 text-muted">or</p>
+                                <span className="document-browse-button">
+                                  Browse file
+                                </span>
                               </>
                             )}
                           </div>
@@ -1549,7 +1145,9 @@ function QrPage() {
                       </>
                     ) : (
                       <>
-                        <label className="form-label fw-semibold">LOGO URL</label>
+                        <label className="form-label fw-semibold">
+                          LOGO URL
+                        </label>
                         <input
                           type="url"
                           className="form-control"
@@ -1564,24 +1162,6 @@ function QrPage() {
                         <small className="text-muted">
                           הדבק כאן URL של תמונה (PNG/JPG/SVG)
                         </small>
-                        {logoUrl && (
-                          <div className="alert alert-info d-flex flex-column gap-2">
-                            <span className="fw-semibold">Preview:</span>
-                            <img
-                              src={logoUrl}
-                              alt="Logo preview"
-                              style={{
-                                maxWidth: "150px",
-                                maxHeight: "150px",
-                                borderRadius: "8px",
-                              }}
-                              onError={(e) => {
-                                console.error("Logo image failed to load");
-                                e.target.style.display = "none";
-                              }}
-                            />
-                          </div>
-                        )}
                       </>
                     )}
                   </div>
@@ -1716,6 +1296,17 @@ function QrPage() {
           Built for your portfolio · Privacy · Terms
         </div>
       </footer>
+
+      <button
+        type="button"
+        className={`back-to-top-button ${showBackToTop ? "visible" : ""}`}
+        onClick={scrollToTop}
+        aria-label="Back to top"
+      >
+        <svg className="back-to-top-icon" viewBox="0 0 384 512">
+          <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z" />
+        </svg>
+      </button>
     </div>
   );
 }

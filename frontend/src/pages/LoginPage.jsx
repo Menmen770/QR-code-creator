@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import RobotSpline from "../components/RobotSpline";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-full.png";
 
 const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isPasswordValid = (password) => {
