@@ -443,12 +443,78 @@ function QrPage() {
   const downloadQR = (format) => {
     if (!qrImage) return;
 
-    const link = document.createElement("a");
-    link.href = qrImage;
-    link.download = `qr-code.${format}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Create canvas to add background
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      // Set canvas size to match QR image
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Draw background
+      if (bgColorMode === "none") {
+        // Transparent background - just draw QR
+        ctx.drawImage(img, 0, 0);
+      } else if (bgColorMode === "solid") {
+        // Solid color background
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+      } else if (bgColorMode === "effect" && bgEffect !== "none") {
+        // Gradient background
+        const gradientData = getEffectBackground(bgEffect);
+        
+        // Parse gradient string to extract colors and angles
+        const gradientMatch = gradientData.match(/linear-gradient\((\d+)deg,\s*([^)]+)\)/);
+        if (gradientMatch) {
+          const angle = parseInt(gradientMatch[1]);
+          const colorStops = gradientMatch[2].split(/,\s*(?![^()]*\))/);
+          
+          // Convert angle to canvas gradient coordinates
+          const angleRad = (angle - 90) * (Math.PI / 180);
+          const x0 = canvas.width / 2 - Math.cos(angleRad) * canvas.width / 2;
+          const y0 = canvas.height / 2 - Math.sin(angleRad) * canvas.height / 2;
+          const x1 = canvas.width / 2 + Math.cos(angleRad) * canvas.width / 2;
+          const y1 = canvas.height / 2 + Math.sin(angleRad) * canvas.height / 2;
+          
+          const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
+          
+          // Add color stops
+          colorStops.forEach((stop) => {
+            const match = stop.match(/([#\w]+)\s+(\d+)%/);
+            if (match) {
+              const color = match[1];
+              const position = parseInt(match[2]) / 100;
+              gradient.addColorStop(position, color);
+            }
+          });
+          
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        ctx.drawImage(img, 0, 0);
+      } else {
+        // Default: just draw QR
+        ctx.drawImage(img, 0, 0);
+      }
+
+      // Convert canvas to blob and download
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `qr-code.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, `image/${format}`);
+    };
+
+    img.src = qrImage;
   };
 
   const tabClass = (tabName) =>
