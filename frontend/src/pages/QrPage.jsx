@@ -56,6 +56,9 @@ function QrPage() {
   const [dotsType, setDotsType] = useState("square"); // QR dots shape
   const [cornersType, setCornersType] = useState("square"); // QR corners shape
   const [logoUrl, setLogoUrl] = useState(""); // Logo/image URL for QR center
+  const [logoFile, setLogoFile] = useState(null); // Logo file object
+  const [isLogoDragging, setIsLogoDragging] = useState(false); // Logo drag state
+  const [logoInputMode, setLogoInputMode] = useState("file"); // "file" or "url"
 
   // Map edge images to corner shapes
   const edgeImages = {
@@ -298,6 +301,54 @@ function QrPage() {
       );
     } else {
       console.log("INVALID: File is not a PDF or no file selected");
+    }
+  };
+
+  const handleLogoDrop = (e) => {
+    e.preventDefault();
+    setIsLogoDragging(false);
+    const file = e.dataTransfer.files[0];
+    console.log("Logo dropped:", file?.name, "Type:", file?.type);
+    if (file && file.type.startsWith("image/")) {
+      console.log("Valid image file. Size:", file.size, "bytes");
+      setLogoFile(file);
+      // Convert to data URL for preview and API
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setLogoUrl(event.target.result);
+        console.log("Logo converted to data URL");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.log("INVALID: File is not an image or no file dropped");
+    }
+  };
+
+  const handleLogoDragOver = (e) => {
+    e.preventDefault();
+    setIsLogoDragging(true);
+  };
+
+  const handleLogoDragLeave = (e) => {
+    e.preventDefault();
+    setIsLogoDragging(false);
+  };
+
+  const handleLogoFileSelect = (e) => {
+    const file = e.target.files[0];
+    console.log("Logo file selected:", file?.name, "Type:", file?.type);
+    if (file && file.type.startsWith("image/")) {
+      console.log("Valid image file. Size:", file.size, "bytes");
+      setLogoFile(file);
+      // Convert to data URL for preview and API
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setLogoUrl(event.target.result);
+        console.log("Logo converted to data URL");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.log("INVALID: File is not an image or no file selected");
     }
   };
 
@@ -1423,38 +1474,115 @@ function QrPage() {
 
                 {activeTab === "logo" && (
                   <div className="vstack gap-4">
-                    <label className="form-label fw-semibold">LOGO URL</label>
-                    <input
-                      type="url"
-                      className="form-control"
-                      placeholder="https://example.com/logo.png"
-                      value={logoUrl}
-                      onChange={(e) => {
-                        console.log("Logo URL changed to:", e.target.value);
-                        setLogoUrl(e.target.value);
-                      }}
-                    />
-                    <small className="text-muted">
-                      Enter the URL of a PNG or JPG image to place in the center
-                      of the QR code. Recommended size: 100x100px to 200x200px
-                    </small>
-                    {logoUrl && (
-                      <div className="alert alert-info d-flex flex-column gap-2">
-                        <span className="fw-semibold">Preview:</span>
-                        <img
-                          src={logoUrl}
-                          alt="Logo preview"
-                          style={{
-                            maxWidth: "150px",
-                            maxHeight: "150px",
-                            borderRadius: "8px",
-                          }}
-                          onError={(e) => {
-                            console.error("Logo image failed to load");
-                            e.target.style.display = "none";
+                    <div className="d-flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        className={`btn ${logoInputMode === "file" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setLogoInputMode("file")}
+                      >
+                        <FiFileText className="me-2" />
+                        העלאת תמונה
+                      </button>
+                      <button
+                        type="button"
+                        className={`btn ${logoInputMode === "url" ? "btn-primary" : "btn-outline-secondary"}`}
+                        onClick={() => setLogoInputMode("url")}
+                      >
+                        <FiLink className="me-2" />
+                        הדבקת URL
+                      </button>
+                    </div>
+
+                    {logoInputMode === "file" ? (
+                      <>
+                        <div
+                          className={`pdf-drop-zone ${isLogoDragging ? "dragging" : ""} ${logoFile ? "has-file" : ""}`}
+                          onDrop={handleLogoDrop}
+                          onDragOver={handleLogoDragOver}
+                          onDragLeave={handleLogoDragLeave}
+                          onClick={() =>
+                            document.getElementById("logo-file-input").click()
+                          }
+                        >
+                          <input
+                            id="logo-file-input"
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+                            onChange={handleLogoFileSelect}
+                            style={{ display: "none" }}
+                          />
+                          <div className="drop-zone-content">
+                            {logoFile ? (
+                              <>
+                                <img
+                                  src={logoUrl}
+                                  alt="Logo preview"
+                                  style={{
+                                    maxWidth: "150px",
+                                    maxHeight: "150px",
+                                    borderRadius: "8px",
+                                    marginBottom: "8px",
+                                  }}
+                                />
+                                <h5 className="mb-1">{logoFile.name}</h5>
+                                <p className="text-muted mb-0">
+                                  {(logoFile.size / 1024).toFixed(2)} KB
+                                </p>
+                                <small className="text-muted">
+                                  לחץ לבחירת תמונה אחרת
+                                </small>
+                              </>
+                            ) : (
+                              <>
+                                <FiFileText size={48} className="mb-3" />
+                                <h5 className="mb-2">גרור תמונה לכאן</h5>
+                                <p className="text-muted mb-0">
+                                  או לחץ לבחירת קובץ
+                                </p>
+                                <small className="text-muted">
+                                  PNG, JPG או SVG
+                                </small>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <label className="form-label fw-semibold">LOGO URL</label>
+                        <input
+                          type="url"
+                          className="form-control"
+                          placeholder="https://example.com/logo.png"
+                          value={logoUrl}
+                          onChange={(e) => {
+                            console.log("Logo URL changed to:", e.target.value);
+                            setLogoUrl(e.target.value);
+                            setLogoFile(null); // Clear file when using URL
                           }}
                         />
-                      </div>
+                        <small className="text-muted">
+                          הדבק כאן URL של תמונה (PNG/JPG/SVG)
+                        </small>
+                        {logoUrl && (
+                          <div className="alert alert-info d-flex flex-column gap-2">
+                            <span className="fw-semibold">Preview:</span>
+                            <img
+                              src={logoUrl}
+                              alt="Logo preview"
+                              style={{
+                                maxWidth: "150px",
+                                maxHeight: "150px",
+                                borderRadius: "8px",
+                              }}
+                              onError={(e) => {
+                                console.error("Logo image failed to load");
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
