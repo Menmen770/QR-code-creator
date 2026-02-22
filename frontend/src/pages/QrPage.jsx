@@ -30,6 +30,7 @@ import body3 from "../assets/body/3.svg";
 import body4 from "../assets/body/4.svg";
 import body5 from "../assets/body/5.svg";
 import body6 from "../assets/body/6.svg";
+import AccessibilityButton from "../components/AccessibilityButton";
 
 function QrPage() {
   const qr = useQrGenerator();
@@ -130,11 +131,22 @@ function QrPage() {
 
   return (
     <div className="qr-page">
+      <AccessibilityButton />
       <header className="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm">
         <div className="container py-2">
-          <Link className="navbar-brand d-flex align-items-center" to="/">
+          <button
+            className="navbar-brand d-flex align-items-center"
+            onClick={() => (window.location.href = "/")}
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
+            title="Back to home"
+          >
             <img src={logo} alt="QR Master" className="brand-logo" />
-          </Link>
+          </button>
           <div className="d-flex gap-2">
             <Link className="btn btn-outline-secondary btn-sm" to="/login">
               Login

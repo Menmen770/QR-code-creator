@@ -1,0 +1,86 @@
+/* src/components/AccessibilityButton.css */
+
+.accessibility-button {
+  position: fixed;
+  left: 30px;
+  bottom: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #0a9396;
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px rgba(10, 147, 150, 0.25);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  z-index: 1100;
+  padding: 0;
+}
+
+.accessibility-button:hover {
+  width: 120px;
+  border-radius: 50px;
+  background-color: #087b7d;
+  box-shadow: 0 0 0 4px rgba(8, 123, 125, 0.25);
+}
+
+.accessibility-button:focus {
+  outline: 3px solid #0a9396;
+  outline-offset: 2px;
+}
+
+.accessibility-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.accessibility-text {
+  font-size: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: font-size 0.3s ease;
+}
+
+.accessibility-button:hover .accessibility-text {
+  font-size: 13px;
+}
+
+/* Dark Mode Support */
+[data-dark-mode] .accessibility-button {
+  background-color: #0a9396;
+  box-shadow: 0 0 0 4px rgba(10, 147, 150, 0.25);
+}
+
+[data-dark-mode] .accessibility-button:hover {
+  background-color: #087b7d;
+  box-shadow: 0 0 0 4px rgba(8, 123, 125, 0.25);
+}
+
+[data-dark-mode] .accessibility-button:focus {
+  outline-color: #0a9396;
+}
+
+@media (max-width: 768px) {
+  .accessibility-button {
+    left: 18px;
+    bottom: 18px;
+    width: 45px;
+    height: 45px;
+  }
+
+  .accessibility-button:hover {
+    width: 110px;
+  }
+
+  .accessibility-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
