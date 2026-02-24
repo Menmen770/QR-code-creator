@@ -4,8 +4,6 @@ import QrPage from "./pages/QrPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import LearnQrPage from "./pages/LearnQrPage";
-import ApiPage from "./pages/ApiPage";
-import PricingPage from "./pages/PricingPage";
 import ContactPage from "./pages/ContactPage";
 import PrivacyTermsPage from "./pages/PrivacyTermsPage";
 import MainNavbar from "./components/MainNavbar";
@@ -59,8 +57,6 @@ function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<QrPage />} />
           <Route path="/learn-qr" element={<LearnQrPage />} />
-          <Route path="/api" element={<ApiPage />} />
-          <Route path="/pricing" element={<PricingPage />} />
         </Route>
 
         <Route path="/login" element={<LoginPage />} />

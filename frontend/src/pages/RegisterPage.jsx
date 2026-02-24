@@ -52,7 +52,7 @@ function RegisterPage() {
     }
 
     if (!isFormValid()) {
-      setError("Please fill in all fields correctly");
+      setError("נא למלא את כל השדות בצורה תקינה");
       return;
     }
 
@@ -69,12 +69,12 @@ function RegisterPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Registration failed");
+        throw new Error(data.error || "ההרשמה נכשלה");
       }
 
       navigate("/");
     } catch (err) {
-      setError(err.message || "Registration failed");
+      setError(err.message || "ההרשמה נכשלה");
     } finally {
       setLoading(false);
     }
@@ -86,21 +86,18 @@ function RegisterPage() {
         <div className="container">
           <div className="row align-items-center justify-content-center auth-shell">
             <div className="col-lg-5">
-              <div className="text-center mb-4">
-                <img src={logo} alt="QR Master" className="auth-logo-large" />
-              </div>
               <div className="auth-card card shadow-sm">
                 <div className="card-body p-4">
                   <div className="auth-header text-center">
-                    <h2 className="fw-bold">Create account</h2>
-                    <p className="text-muted">Set up your profile in seconds</p>
+                    <h2 className="fw-bold">יצירת חשבון</h2>
+                    <p className="text-muted">השלם הרשמה תוך כמה שניות</p>
                   </div>
 
                   {error && <div className="alert alert-danger">{error}</div>}
 
                   <form onSubmit={handleSubmit} className="vstack gap-3">
                     <div>
-                      <label className="form-label">Full name</label>
+                      <label className="form-label">שם מלא</label>
                       <input
                         type="text"
                         name="fullName"
@@ -112,17 +109,17 @@ function RegisterPage() {
                             ? "is-invalid"
                             : ""
                         }`}
-                        placeholder="Full name"
+                        placeholder="השם המלא שלך"
                       />
                       {touched.fullName && form.fullName.trim().length < 2 && (
                         <div className="invalid-feedback">
-                          Enter at least 2 characters
+                          יש להזין לפחות 2 תווים
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="form-label">Email</label>
+                      <label className="form-label">אימייל</label>
                       <input
                         type="email"
                         name="email"
@@ -138,13 +135,13 @@ function RegisterPage() {
                       />
                       {touched.email && !isEmailValid(form.email) && (
                         <div className="invalid-feedback">
-                          Enter a valid email
+                          נא להזין אימייל תקין
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="form-label">Phone</label>
+                      <label className="form-label">טלפון</label>
                       <input
                         type="tel"
                         name="phone"
@@ -156,17 +153,17 @@ function RegisterPage() {
                             ? "is-invalid"
                             : ""
                         }`}
-                        placeholder="Digits only"
+                        placeholder="ספרות בלבד"
                       />
                       {touched.phone && !isPhoneValid(form.phone) && (
                         <div className="invalid-feedback">
-                          Enter 9-11 digits only
+                          נא להזין 9-11 ספרות בלבד
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="form-label">Password</label>
+                      <label className="form-label">סיסמה</label>
                       <div className="input-group">
                         <input
                           type={showPassword ? "text" : "password"}
@@ -179,20 +176,20 @@ function RegisterPage() {
                               ? "is-invalid"
                               : ""
                           }`}
-                          placeholder="At least 7 characters"
+                          placeholder="לפחות 7 תווים"
                         />
                         <button
                           className="btn btn-outline-secondary"
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
                         >
-                          {showPassword ? "Hide" : "Show"}
+                          {showPassword ? "הסתר" : "הצג"}
                         </button>
                         {touched.password &&
                           !isPasswordValid(form.password) && (
                             <div className="invalid-feedback d-block">
-                              Password must be 7+ chars, include Hebrew/English
-                              letters and numbers only.
+                              הסיסמה חייבת לכלול לפחות 7 תווים, אותיות
+                              (עברית/אנגלית) ומספרים בלבד.
                             </div>
                           )}
                       </div>
@@ -203,14 +200,14 @@ function RegisterPage() {
                       className="btn btn-teal w-100"
                       disabled={loading}
                     >
-                      {loading ? "Creating account..." : "Register"}
+                      {loading ? "יוצר חשבון..." : "הרשמה"}
                     </button>
                   </form>
 
                   <div className="auth-footer">
-                    <span>Already have an account?</span>
+                    <span>כבר יש לך חשבון?</span>
                     <Link to="/login" className="auth-switch-link">
-                      Login
+                      להתחברות
                     </Link>
                   </div>
                 </div>

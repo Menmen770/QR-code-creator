@@ -348,10 +348,10 @@ function MainNavbar() {
         ) : (
           <div className="d-flex gap-2">
             <Link className="btn btn-outline-secondary btn-sm" to="/login">
-              Login
+              התחברות
             </Link>
             <Link className="btn btn-teal btn-sm" to="/register">
-              Sign Up
+              הרשמה
             </Link>
           </div>
         )}

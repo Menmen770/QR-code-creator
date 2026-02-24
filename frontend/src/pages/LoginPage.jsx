@@ -43,7 +43,7 @@ function LoginPage() {
     }
 
     if (!isFormValid()) {
-      setError("Please enter a valid email and password");
+      setError("נא להזין אימייל וסיסמה תקינים");
       return;
     }
 
@@ -60,12 +60,12 @@ function LoginPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(data.error || "ההתחברות נכשלה");
       }
 
       navigate("/");
     } catch (err) {
-      setError(err.message || "Login failed");
+      setError(err.message || "ההתחברות נכשלה");
     } finally {
       setLoading(false);
     }
@@ -77,21 +77,18 @@ function LoginPage() {
         <div className="container">
           <div className="row align-items-center justify-content-center auth-shell">
             <div className="col-lg-5">
-              <div className="text-center mb-4">
-                <img src={logo} alt="QR Master" className="auth-logo-large" />
-              </div>
               <div className="auth-card card shadow-sm">
                 <div className="card-body p-4">
                   <div className="auth-header text-center">
-                    <h2 className="fw-bold">Welcome back</h2>
-                    <p className="text-muted">Login to continue</p>
+                    <h2 className="fw-bold">ברוך שובך</h2>
+                    <p className="text-muted">התחבר כדי להמשיך</p>
                   </div>
 
                   {error && <div className="alert alert-danger">{error}</div>}
 
                   <form onSubmit={handleSubmit} className="vstack gap-3">
                     <div>
-                      <label className="form-label">Email</label>
+                      <label className="form-label">אימייל</label>
                       <input
                         type="email"
                         name="email"
@@ -107,13 +104,13 @@ function LoginPage() {
                       />
                       {touched.email && !isEmailValid(form.email) && (
                         <div className="invalid-feedback">
-                          Enter a valid email
+                          נא להזין אימייל תקין
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="form-label">Password</label>
+                      <label className="form-label">סיסמה</label>
                       <div className="input-group">
                         <input
                           type={showPassword ? "text" : "password"}
@@ -126,20 +123,20 @@ function LoginPage() {
                               ? "is-invalid"
                               : ""
                           }`}
-                          placeholder="Your password"
+                          placeholder="הסיסמה שלך"
                         />
                         <button
                           className="btn btn-outline-secondary"
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
                         >
-                          {showPassword ? "Hide" : "Show"}
+                          {showPassword ? "הסתר" : "הצג"}
                         </button>
                         {touched.password &&
                           !isPasswordValid(form.password) && (
                             <div className="invalid-feedback d-block">
-                              Password must be 7+ chars, include Hebrew/English
-                              letters and numbers only.
+                              הסיסמה חייבת לכלול לפחות 7 תווים, אותיות
+                              (עברית/אנגלית) ומספרים בלבד.
                             </div>
                           )}
                       </div>
@@ -150,14 +147,14 @@ function LoginPage() {
                       className="btn btn-teal w-100"
                       disabled={loading}
                     >
-                      {loading ? "Logging in..." : "Login"}
+                      {loading ? "מתחבר..." : "התחברות"}
                     </button>
                   </form>
 
                   <div className="auth-footer">
-                    <span>Don't have an account?</span>
+                    <span>אין לך חשבון?</span>
                     <Link to="/register" className="auth-switch-link">
-                      Create one
+                      להרשמה
                     </Link>
                   </div>
                 </div>
