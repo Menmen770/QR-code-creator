@@ -6,9 +6,9 @@ import logo from "../assets/logo-full.png";
 const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isPasswordValid = (password) => {
   if (password.length < 7) return false;
-  if (!/^[A-Za-z0-9]+$/.test(password)) return false;
-  if (!/[A-Za-z]/.test(password)) return false;
-  if (!/[0-9]/.test(password)) return false;
+  if (!/^[\p{L}\p{N}]+$/u.test(password)) return false;
+  if (!/\p{L}/u.test(password)) return false;
+  if (!/\p{N}/u.test(password)) return false;
   return true;
 };
 
@@ -138,8 +138,8 @@ function LoginPage() {
                         {touched.password &&
                           !isPasswordValid(form.password) && (
                             <div className="invalid-feedback d-block">
-                              Password must be 7+ chars, letters and numbers
-                              only.
+                              Password must be 7+ chars, include Hebrew/English
+                              letters and numbers only.
                             </div>
                           )}
                       </div>

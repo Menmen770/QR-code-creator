@@ -26,9 +26,9 @@ const CLIENT_ORIGINS = [
 const isPasswordValid = (password) => {
   if (typeof password !== "string") return false;
   if (password.length < 7) return false;
-  if (!/^[A-Za-z0-9]+$/.test(password)) return false;
-  if (!/[A-Za-z]/.test(password)) return false;
-  if (!/[0-9]/.test(password)) return false;
+  if (!/^[\p{L}\p{N}]+$/u.test(password)) return false;
+  if (!/\p{L}/u.test(password)) return false;
+  if (!/\p{N}/u.test(password)) return false;
   return true;
 };
 
@@ -137,6 +137,13 @@ app.use(
     store: sessionStore,
   }),
 );
+
+const requireAuth = (req, res, next) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+};
 
 // ה-Route הראשון שלנו - בדיקה שהשרת עובד
 app.get("/", (req, res) => {
@@ -268,7 +275,7 @@ app.post("/api/auth/register", async (req, res) => {
   if (!isPasswordValid(password)) {
     return res.status(400).json({
       error:
-        "Password must be 7+ chars, include letters and numbers, and use only letters/numbers",
+        "Password must be 7+ chars, include letters (English/Hebrew) and numbers, and use only letters/numbers",
     });
   }
 
@@ -338,7 +345,7 @@ app.get("/api/auth/me", async (req, res) => {
 
   try {
     const user = await User.findById(req.session.userId).select(
-      "fullName email",
+      "fullName email phone",
     );
     if (!user) {
       return res.status(401).json({ error: "Unauthorized" });
@@ -347,6 +354,43 @@ app.get("/api/auth/me", async (req, res) => {
   } catch (err) {
     console.error("Me error:", err);
     res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+app.put("/api/auth/profile", requireAuth, async (req, res) => {
+  const { fullName, phone } = req.body;
+
+  if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
+    return res
+      .status(400)
+      .json({ error: "Full name must be at least 2 characters" });
+  }
+
+  if (!phone || !isPhoneValid(phone)) {
+    return res.status(400).json({ error: "Invalid phone number" });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.session.userId,
+      {
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).select("fullName email phone");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (err) {
+    console.error("Profile update error:", err);
+    res.status(500).json({ error: "Failed to update profile" });
   }
 });
 

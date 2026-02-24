@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const RECENT_QR_KEY = "qrMasterRecentHistory";
+
 export function useQrGenerator() {
   const [qrType, setQrType] = useState("url");
   const [qrValue, setQrValue] = useState("https://example.com");
@@ -261,6 +263,25 @@ export function useQrGenerator() {
 
   const downloadQR = (format) => {
     if (!qrImage) return;
+
+    try {
+      const entry = {
+        id: Date.now(),
+        type: qrType,
+        value: String(qrValue || "").trim(),
+        createdAt: new Date().toISOString(),
+      };
+
+      const existing = JSON.parse(localStorage.getItem(RECENT_QR_KEY) || "[]");
+      const deduped = existing.filter(
+        (item) => !(item.type === entry.type && item.value === entry.value),
+      );
+      const next = [entry, ...deduped].slice(0, 8);
+      localStorage.setItem(RECENT_QR_KEY, JSON.stringify(next));
+      window.dispatchEvent(new Event("qr-recent-updated"));
+    } catch {
+      // ignore localStorage issues
+    }
 
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");

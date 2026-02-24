@@ -1,21 +1,19 @@
 import {
-  FiLink,
-  FiFileText,
-  FiMail,
-  FiPhone,
-  FiWifi,
-  FiUser,
-  FiMessageCircle,
-} from "react-icons/fi";
-import {
-  BsChat,
-  BsFacebook,
-  BsInstagram,
-  BsTwitterX,
-  BsLinkedin,
-  BsYoutube,
-  BsTiktok,
-} from "react-icons/bs";
+  IconLink,
+  IconFileText,
+  IconMail,
+  IconPhone,
+  IconWifi,
+  IconUser,
+  IconMessageCircle,
+  IconBrandWhatsapp,
+  IconBrandFacebook,
+  IconBrandInstagram,
+  IconBrandX,
+  IconBrandLinkedin,
+  IconBrandYoutube,
+  IconBrandTiktok,
+} from "@tabler/icons-react";
 
 export const BG_EFFECTS = [
   { id: "none", name: "Solid" },
@@ -66,23 +64,23 @@ export const CORNER_SHAPES = [
 ];
 
 export const QR_TYPES_MAIN = [
-  { value: "url", label: "Website", icon: FiLink },
-  { value: "pdf", label: "PDF", icon: FiFileText },
-  { value: "email", label: "Email", icon: FiMail },
-  { value: "contact", label: "VCard", icon: FiUser },
-  { value: "whatsapp", label: "WhatsApp", icon: BsChat },
-  { value: "phone", label: "Phone", icon: FiPhone },
-  { value: "sms", label: "SMS", icon: FiMessageCircle },
+  { value: "url", label: "Website", icon: IconLink },
+  { value: "pdf", label: "PDF", icon: IconFileText },
+  { value: "email", label: "Email", icon: IconMail },
+  { value: "contact", label: "VCard", icon: IconUser },
+  { value: "whatsapp", label: "WhatsApp", icon: IconBrandWhatsapp },
+  { value: "phone", label: "Phone", icon: IconPhone },
+  { value: "sms", label: "SMS", icon: IconMessageCircle },
 ];
 
 export const QR_TYPES_MORE = [
-  { value: "wifi", label: "WiFi", icon: FiWifi },
-  { value: "facebook", label: "Facebook", icon: BsFacebook },
-  { value: "instagram", label: "Instagram", icon: BsInstagram },
-  { value: "twitter", label: "Twitter/X", icon: BsTwitterX },
-  { value: "linkedin", label: "LinkedIn", icon: BsLinkedin },
-  { value: "youtube", label: "YouTube", icon: BsYoutube },
-  { value: "tiktok", label: "TikTok", icon: BsTiktok },
+  { value: "wifi", label: "WiFi", icon: IconWifi },
+  { value: "facebook", label: "Facebook", icon: IconBrandFacebook },
+  { value: "instagram", label: "Instagram", icon: IconBrandInstagram },
+  { value: "twitter", label: "Twitter/X", icon: IconBrandX },
+  { value: "linkedin", label: "LinkedIn", icon: IconBrandLinkedin },
+  { value: "youtube", label: "YouTube", icon: IconBrandYoutube },
+  { value: "tiktok", label: "TikTok", icon: IconBrandTiktok },
 ];
 
 export const QR_TYPES = [...QR_TYPES_MAIN, ...QR_TYPES_MORE];

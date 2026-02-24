@@ -132,9 +132,9 @@ function QrPage() {
       <AccessibilityButton />
       <main className="container py-4">
         <section className="text-center mb-5">
-          <h1 className="display-5 fw-bold">Free QR Code Generator</h1>
+          <h1 className="display-5 fw-bold">מחולל QR בעיצוב אישי</h1>
           <p className="lead text-muted">
-            Create, customize, and download QR codes with a clean, modern UI.
+            ליצור, לעצב ולהוריד קודי QR בממשק מודרני, מהיר ובחינם.
           </p>
         </section>
 
@@ -191,12 +191,12 @@ function QrPage() {
         </div>
 
         <div className="row g-4" style={{ alignItems: "stretch" }}>
-          <div className="col-lg-8 d-flex flex-column gap-4">
+          <div className="col-lg-7 d-flex flex-column gap-4">
             <div className="card qr-card shadow-sm flex-grow-1">
               <div className="card-body p-4 d-flex flex-column">
                 <div className="d-flex align-items-center gap-3 mb-3">
                   <span className="qr-step">1</span>
-                  <h5 className="mb-0">Enter your content</h5>
+                  <h5 className="mb-0">הזן את התוכן שלך</h5>
                 </div>
 
                 {qrType === "url" && (
@@ -208,7 +208,7 @@ function QrPage() {
                       placeholder="https://example.com"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">Enter a website URL</div>
+                    <div className="form-text">הזן כתובת אתר</div>
                   </div>
                 )}
 
@@ -280,12 +280,10 @@ function QrPage() {
                                 >
                                   <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z" />
                                 </svg>
-                                <p className="mb-1 fw-semibold">
-                                  Drag and Drop
-                                </p>
-                                <p className="mb-2 text-muted">or</p>
+                                <p className="mb-1 fw-semibold">גרור ושחרר</p>
+                                <p className="mb-2 text-muted">או</p>
                                 <span className="document-browse-button">
-                                  Browse file
+                                  בחר קובץ
                                 </span>
                               </>
                             )}
@@ -314,7 +312,7 @@ function QrPage() {
                 {qrType === "whatsapp" && (
                   <div className="vstack gap-3">
                     <div>
-                      <label className="form-label">Phone Number</label>
+                      <label className="form-label">מספר טלפון</label>
                       <input
                         type="tel"
                         value={qrInputs.whatsapp.phone}
@@ -326,19 +324,19 @@ function QrPage() {
                       />
                     </div>
                     <div>
-                      <label className="form-label">Message</label>
+                      <label className="form-label">הודעה</label>
                       <textarea
                         value={qrInputs.whatsapp.message}
                         onChange={(e) =>
                           handleInputChange("whatsapp.message", e.target.value)
                         }
-                        placeholder="Message to send..."
+                        placeholder="הודעה לשליחה..."
                         className="form-control form-control-lg"
                         rows="2"
                       />
                     </div>
                     <div className="form-text">
-                      Opens WhatsApp chat with this message
+                      פותח שיחת WhatsApp עם ההודעה הזו
                     </div>
                   </div>
                 )}
@@ -346,7 +344,7 @@ function QrPage() {
                 {qrType === "email" && (
                   <div className="vstack gap-3">
                     <div>
-                      <label className="form-label">Email Address</label>
+                      <label className="form-label">כתובת אימייל</label>
                       <input
                         type="email"
                         value={qrInputs.email.email}
@@ -358,31 +356,31 @@ function QrPage() {
                       />
                     </div>
                     <div>
-                      <label className="form-label">Subject (optional)</label>
+                      <label className="form-label">נושא (אופציונלי)</label>
                       <input
                         type="text"
                         value={qrInputs.email.subject}
                         onChange={(e) =>
                           handleInputChange("email.subject", e.target.value)
                         }
-                        placeholder="Email subject..."
+                        placeholder="נושא האימייל..."
                         className="form-control form-control-lg"
                       />
                     </div>
                     <div>
-                      <label className="form-label">Message (optional)</label>
+                      <label className="form-label">הודעה (אופציונלי)</label>
                       <textarea
                         value={qrInputs.email.message}
                         onChange={(e) =>
                           handleInputChange("email.message", e.target.value)
                         }
-                        placeholder="Email body..."
+                        placeholder="תוכן האימייל..."
                         className="form-control form-control-lg"
                         rows="2"
                       />
                     </div>
                     <div className="form-text">
-                      Opens email client with preset content
+                      פותח את אפליקציית האימייל עם תוכן מוכן
                     </div>
                   </div>
                 )}
@@ -398,14 +396,14 @@ function QrPage() {
                       placeholder="+92 123 456 7890"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">Enter phone number to call</div>
+                    <div className="form-text">הזן מספר טלפון לחיוג</div>
                   </div>
                 )}
 
                 {qrType === "sms" && (
                   <div className="vstack gap-3">
                     <div>
-                      <label className="form-label">Phone Number</label>
+                      <label className="form-label">מספר טלפון</label>
                       <input
                         type="tel"
                         value={qrInputs.sms.phone}
@@ -417,19 +415,19 @@ function QrPage() {
                       />
                     </div>
                     <div>
-                      <label className="form-label">Message</label>
+                      <label className="form-label">הודעה</label>
                       <textarea
                         value={qrInputs.sms.message}
                         onChange={(e) =>
                           handleInputChange("sms.message", e.target.value)
                         }
-                        placeholder="Your SMS message..."
+                        placeholder="תוכן הודעת ה-SMS..."
                         className="form-control form-control-lg"
                         rows="2"
                       />
                     </div>
                     <div className="form-text">
-                      Opens SMS app with this message
+                      פותח את אפליקציית ה-SMS עם ההודעה הזו
                     </div>
                   </div>
                 )}
@@ -437,31 +435,31 @@ function QrPage() {
                 {qrType === "wifi" && (
                   <div className="vstack gap-3">
                     <div>
-                      <label className="form-label">Network Name (SSID)</label>
+                      <label className="form-label">שם הרשת (SSID)</label>
                       <input
                         type="text"
                         value={qrInputs.wifi.ssid}
                         onChange={(e) =>
                           handleInputChange("wifi.ssid", e.target.value)
                         }
-                        placeholder="Network Name"
+                        placeholder="שם הרשת"
                         className="form-control form-control-lg"
                       />
                     </div>
                     <div>
-                      <label className="form-label">Password</label>
+                      <label className="form-label">סיסמה</label>
                       <input
                         type="text"
                         value={qrInputs.wifi.password}
                         onChange={(e) =>
                           handleInputChange("wifi.password", e.target.value)
                         }
-                        placeholder="WiFi password"
+                        placeholder="סיסמת WiFi"
                         className="form-control form-control-lg"
                       />
                     </div>
                     <div>
-                      <label className="form-label">Security Type</label>
+                      <label className="form-label">סוג אבטחה</label>
                       <select
                         value={qrInputs.wifi.security}
                         onChange={(e) =>
@@ -471,11 +469,11 @@ function QrPage() {
                       >
                         <option value="WPA">WPA/WPA2</option>
                         <option value="WEP">WEP</option>
-                        <option value="nopass">Open (No Password)</option>
+                        <option value="nopass">פתוח (ללא סיסמה)</option>
                       </select>
                     </div>
                     <div className="form-text">
-                      Scan to auto-connect to WiFi
+                      סרוק להתחברות אוטומטית ל-WiFi
                     </div>
                   </div>
                 )}
@@ -483,19 +481,19 @@ function QrPage() {
                 {qrType === "contact" && (
                   <div className="vstack gap-3">
                     <div>
-                      <label className="form-label">Full Name</label>
+                      <label className="form-label">שם מלא</label>
                       <input
                         type="text"
                         value={qrInputs.contact.name}
                         onChange={(e) =>
                           handleInputChange("contact.name", e.target.value)
                         }
-                        placeholder="your name"
+                        placeholder="השם שלך"
                         className="form-control form-control-lg"
                       />
                     </div>
                     <div>
-                      <label className="form-label">Phone</label>
+                      <label className="form-label">טלפון</label>
                       <input
                         type="tel"
                         value={qrInputs.contact.phone}
@@ -507,7 +505,7 @@ function QrPage() {
                       />
                     </div>
                     <div>
-                      <label className="form-label">Email</label>
+                      <label className="form-label">אימייל</label>
                       <input
                         type="email"
                         value={qrInputs.contact.email}
@@ -518,115 +516,105 @@ function QrPage() {
                         className="form-control form-control-lg"
                       />
                     </div>
-                    <div className="form-text">Scan to save contact</div>
+                    <div className="form-text">סרוק לשמירת איש קשר</div>
                   </div>
                 )}
 
                 {qrType === "facebook" && (
                   <div>
-                    <label className="form-label">Facebook Username</label>
+                    <label className="form-label">שם משתמש בפייסבוק</label>
                     <input
                       type="text"
                       value={qrInputs.facebook}
                       onChange={(e) =>
                         handleInputChange("facebook", e.target.value)
                       }
-                      placeholder="your_username"
+                      placeholder="שם_המשתמש_שלך"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">
-                      Links to your Facebook profile
-                    </div>
+                    <div className="form-text">קישור לפרופיל הפייסבוק שלך</div>
                   </div>
                 )}
 
                 {qrType === "instagram" && (
                   <div>
-                    <label className="form-label">Instagram Username</label>
+                    <label className="form-label">שם משתמש באינסטגרם</label>
                     <input
                       type="text"
                       value={qrInputs.instagram}
                       onChange={(e) =>
                         handleInputChange("instagram", e.target.value)
                       }
-                      placeholder="your_username"
+                      placeholder="שם_המשתמש_שלך"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">
-                      Links to your Instagram profile
-                    </div>
+                    <div className="form-text">קישור לפרופיל האינסטגרם שלך</div>
                   </div>
                 )}
 
                 {qrType === "twitter" && (
                   <div>
-                    <label className="form-label">Twitter/X Username</label>
+                    <label className="form-label">שם משתמש ב-X/Twitter</label>
                     <input
                       type="text"
                       value={qrInputs.twitter}
                       onChange={(e) =>
                         handleInputChange("twitter", e.target.value)
                       }
-                      placeholder="your_username"
+                      placeholder="שם_המשתמש_שלך"
                       className="form-control form-control-lg"
                     />
                     <div className="form-text">
-                      Links to your Twitter/X profile
+                      קישור לפרופיל ה-X/Twitter שלך
                     </div>
                   </div>
                 )}
 
                 {qrType === "linkedin" && (
                   <div>
-                    <label className="form-label">LinkedIn Username</label>
+                    <label className="form-label">שם משתמש בלינקדאין</label>
                     <input
                       type="text"
                       value={qrInputs.linkedin}
                       onChange={(e) =>
                         handleInputChange("linkedin", e.target.value)
                       }
-                      placeholder="your_username"
+                      placeholder="שם_המשתמש_שלך"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">
-                      Links to your LinkedIn profile
-                    </div>
+                    <div className="form-text">קישור לפרופיל הלינקדאין שלך</div>
                   </div>
                 )}
 
                 {qrType === "youtube" && (
                   <div>
-                    <label className="form-label">YouTube Handle</label>
+                    <label className="form-label">מזהה YouTube</label>
                     <input
                       type="text"
                       value={qrInputs.youtube}
                       onChange={(e) =>
                         handleInputChange("youtube", e.target.value)
                       }
-                      placeholder="your_channel"
+                      placeholder="הערוץ_שלך"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">
-                      Links to your YouTube channel
-                    </div>
+                    <div className="form-text">קישור לערוץ ה-YouTube שלך</div>
                   </div>
                 )}
 
                 {qrType === "tiktok" && (
                   <div>
-                    <label className="form-label">TikTok Username</label>
+                    <label className="form-label">שם משתמש בטיקטוק</label>
                     <input
                       type="text"
                       value={qrInputs.tiktok}
                       onChange={(e) =>
                         handleInputChange("tiktok", e.target.value)
                       }
-                      placeholder="your_username"
+                      placeholder="שם_המשתמש_שלך"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">
-                      Links to your TikTok profile
-                    </div>
+                    <div className="form-text">קישור לפרופיל הטיקטוק שלך</div>
                   </div>
                 )}
               </div>
@@ -636,7 +624,7 @@ function QrPage() {
               <div className="card-body p-4 d-flex flex-column">
                 <div className="d-flex align-items-center gap-3 mb-3">
                   <span className="qr-step">2</span>
-                  <h5 className="mb-0">Customize design</h5>
+                  <h5 className="mb-0">התאם את העיצוב</h5>
                 </div>
 
                 <ul className="nav nav-pills qr-tabs mb-3" role="tablist">
@@ -646,7 +634,7 @@ function QrPage() {
                       className={tabClass("color")}
                       onClick={() => setActiveTab("color")}
                     >
-                      Color
+                      צבע
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -655,7 +643,7 @@ function QrPage() {
                       className={tabClass("shape")}
                       onClick={() => setActiveTab("shape")}
                     >
-                      Shape
+                      צורה
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
@@ -664,7 +652,7 @@ function QrPage() {
                       className={tabClass("logo")}
                       onClick={() => setActiveTab("logo")}
                     >
-                      Logo
+                      לוגו
                     </button>
                   </li>
                 </ul>
@@ -674,7 +662,7 @@ function QrPage() {
                     {/* QR Dots Color Section */}
                     <div className="qr-color-section">
                       <label className="form-label fw-bold mb-3">
-                        QR Dots Color
+                        צבע נקודות ה-QR
                       </label>
 
                       {/* Color Selection */}
@@ -729,7 +717,7 @@ function QrPage() {
                             justifyContent: "center",
                             padding: 0,
                           }}
-                          title="Custom color"
+                          title="צבע מותאם אישית"
                           onMouseEnter={(e) =>
                             (e.target.style.transform = "scale(1.1)")
                           }
@@ -758,9 +746,7 @@ function QrPage() {
                     {/* Background Section */}
                     <hr className="my-2" />
                     <div className="qr-bg-section">
-                      <label className="form-label fw-bold mb-3">
-                        Background
-                      </label>
+                      <label className="form-label fw-bold mb-3">רקע</label>
 
                       {/* Mode Selection */}
                       <div className="d-flex gap-2 mb-3">
@@ -783,7 +769,7 @@ function QrPage() {
                             transition: "all 0.2s ease",
                           }}
                         >
-                          No BG
+                          ללא רקע
                         </button>
                         <button
                           onClick={() => setBgColorMode("solid")}
@@ -804,7 +790,7 @@ function QrPage() {
                             transition: "all 0.2s ease",
                           }}
                         >
-                          Solid Color
+                          צבע אחיד
                         </button>
                         <button
                           onClick={() => setBgColorMode("effect")}
@@ -826,7 +812,7 @@ function QrPage() {
                             transition: "all 0.2s ease",
                           }}
                         >
-                          Effect
+                          אפקט
                         </button>
                       </div>
 
@@ -886,7 +872,7 @@ function QrPage() {
                                   justifyContent: "center",
                                   padding: 0,
                                 }}
-                                title="Custom color"
+                                title="צבע מותאם אישית"
                                 onMouseEnter={(e) =>
                                   (e.target.style.transform = "scale(1.1)")
                                 }
@@ -975,7 +961,7 @@ function QrPage() {
                     {/* Body Type Section */}
                     <div className="qr-shape-section">
                       <label className="form-label fw-semibold mb-4">
-                        BODY TYPE
+                        סוג גוף
                       </label>
                       <div className="d-flex flex-wrap gap-3">
                         {bodyShapes.map((shape, index) => {
@@ -1004,7 +990,7 @@ function QrPage() {
                     {/* Edges Section */}
                     <div className="qr-shape-section">
                       <label className="form-label fw-semibold mb-4">
-                        EDGES
+                        פינות
                       </label>
                       <div className="d-flex flex-wrap gap-3">
                         {cornerShapes.map((shape, index) => {
@@ -1115,12 +1101,10 @@ function QrPage() {
                                 >
                                   <path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128H144zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39V392c0 13.3 10.7 24 24 24s24-10.7 24-24V257.9l39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z" />
                                 </svg>
-                                <p className="mb-1 fw-semibold">
-                                  Drag and Drop
-                                </p>
-                                <p className="mb-2 text-muted">or</p>
+                                <p className="mb-1 fw-semibold">גרור ושחרר</p>
+                                <p className="mb-2 text-muted">או</p>
                                 <span className="document-browse-button">
-                                  Browse file
+                                  בחר קובץ
                                 </span>
                               </>
                             )}
@@ -1130,7 +1114,7 @@ function QrPage() {
                     ) : (
                       <>
                         <label className="form-label fw-semibold">
-                          LOGO URL
+                          קישור לוגו
                         </label>
                         <input
                           type="url"
@@ -1154,7 +1138,7 @@ function QrPage() {
                 {loading && (
                   <div className="alert alert-info d-flex align-items-center gap-2 mt-3">
                     <span className="spinner-border spinner-border-sm" />
-                    Generating...
+                    מייצר...
                   </div>
                 )}
                 {error && (
@@ -1162,19 +1146,19 @@ function QrPage() {
                 )}
                 {qrImage && !loading && (
                   <div className="alert alert-success mt-3">
-                    QR ready to download.
+                    ה-QR מוכן להורדה.
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="col-lg-4">
+          <div className="col-lg-5">
             <div className="card qr-card shadow-sm h-100">
               <div className="card-body p-4 d-flex flex-column">
                 <div className="d-flex align-items-center gap-3 mb-4">
                   <span className="qr-step">3</span>
-                  <h5 className="mb-0">Your QR Code</h5>
+                  <h5 className="mb-0">קוד ה-QR שלך</h5>
                 </div>
 
                 <div
@@ -1199,7 +1183,7 @@ function QrPage() {
                         className="spinner-border text-teal mb-3"
                         role="status"
                       />
-                      <div className="text-muted">Generating QR...</div>
+                      <div className="text-muted">יוצר QR...</div>
                     </div>
                   )}
                   {!loading &&
@@ -1230,7 +1214,7 @@ function QrPage() {
                     qrImage && (
                       <img
                         src={qrImage}
-                        alt="Generated QR Code"
+                        alt="קוד QR שנוצר"
                         className="img-fluid qr-image"
                       />
                     )}
@@ -1244,7 +1228,7 @@ function QrPage() {
                     !qrImage && (
                       <div className="text-center text-muted">
                         <div className="display-6">QR</div>
-                        Start typing to generate a QR code.
+                        התחל להקליד כדי ליצור קוד QR.
                       </div>
                     )}
                 </div>
@@ -1256,7 +1240,7 @@ function QrPage() {
                       onClick={() => downloadQR("png")}
                       disabled={!qrImage || loading}
                     >
-                      Download PNG
+                      הורד PNG
                     </button>
                   </div>
                   <div className="col-md-6">
@@ -1265,7 +1249,7 @@ function QrPage() {
                       onClick={() => downloadQR("svg")}
                       disabled={!qrImage || loading}
                     >
-                      Download SVG
+                      הורד SVG
                     </button>
                   </div>
                 </div>
