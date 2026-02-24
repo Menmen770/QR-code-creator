@@ -6,6 +6,8 @@ import RegisterPage from "./pages/RegisterPage";
 import LearnQrPage from "./pages/LearnQrPage";
 import ApiPage from "./pages/ApiPage";
 import PricingPage from "./pages/PricingPage";
+import ContactPage from "./pages/ContactPage";
+import PrivacyTermsPage from "./pages/PrivacyTermsPage";
 import MainNavbar from "./components/MainNavbar";
 import SiteFooter from "./components/SiteFooter";
 
@@ -63,6 +65,8 @@ function App() {
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy-terms" element={<PrivacyTermsPage />} />
       </Routes>
       <SiteFooter />
     </>

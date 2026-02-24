@@ -123,6 +123,27 @@ function QrPage() {
   const cornerShapes = CORNER_SHAPES;
   const qrTypesMain = QR_TYPES_MAIN;
   const qrTypesMore = QR_TYPES_MORE;
+  const qrTypeTitleMap = {
+    url: "אתר",
+    pdf: "PDF",
+    email: "אימייל",
+    contact: "איש קשר",
+    whatsapp: "וואטסאפ",
+    phone: "טלפון",
+    sms: "SMS",
+    wifi: "WiFi",
+    facebook: "פייסבוק",
+    instagram: "אינסטגרם",
+    twitter: "X / Twitter",
+    linkedin: "לינקדאין",
+    youtube: "יוטיוב",
+    tiktok: "טיקטוק",
+  };
+  const currentTypeTitle = qrTypeTitleMap[qrType] || "תוכן";
+  const stepOneTitle =
+    qrType === "url"
+      ? "הזן את כתובת האתר שלך"
+      : `הזן תוכן עבור ${currentTypeTitle}`;
 
   const tabClass = (tabName) =>
     `nav-link ${activeTab === tabName ? "active" : ""}`;
@@ -196,7 +217,7 @@ function QrPage() {
               <div className="card-body p-4 d-flex flex-column">
                 <div className="d-flex align-items-center gap-3 mb-3">
                   <span className="qr-step">1</span>
-                  <h5 className="mb-0">הזן את התוכן שלך</h5>
+                  <h5 className="mb-0">{stepOneTitle}</h5>
                 </div>
 
                 {qrType === "url" && (
@@ -208,7 +229,6 @@ function QrPage() {
                       placeholder="https://example.com"
                       className="form-control form-control-lg"
                     />
-                    <div className="form-text">הזן כתובת אתר</div>
                   </div>
                 )}
 
@@ -1269,7 +1289,7 @@ function QrPage() {
         type="button"
         className={`back-to-top-button ${showBackToTop ? "visible" : ""}`}
         onClick={scrollToTop}
-        aria-label="Back to top"
+        aria-label="בחזרה ללמעלה"
       >
         <svg className="back-to-top-icon" viewBox="0 0 384 512">
           <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z" />

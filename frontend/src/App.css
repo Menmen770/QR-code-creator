@@ -414,8 +414,8 @@
 .navbar-user-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 6px 11px;
+  gap: 15px;
+  padding: 14px 18px;
   border: 1px solid #dce8eb;
   border-radius: 999px;
   background: #f7fbfb;
@@ -440,15 +440,15 @@
 }
 
 .navbar-user-avatar {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #0a9396;
   color: #fff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -988,6 +988,9 @@
   border-top: 1px solid #eef2f5;
   color: #6b7280;
   font-size: 0.92rem;
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
 }
 
 .info-hero {
@@ -1050,6 +1053,109 @@
   line-height: 1.8;
 }
 
+.learn-article {
+  max-width: 920px;
+}
+
+.learn-title {
+  font-size: clamp(1.9rem, 3.2vw, 2.4rem);
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.learn-lead {
+  font-size: 1.08rem;
+  line-height: 1.9;
+  color: #334155;
+}
+
+.learn-section {
+  padding: 1.15rem 0;
+  border-bottom: 1px solid #e8edf2;
+}
+
+.learn-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.6rem;
+}
+
+.learn-section p,
+.learn-section li {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: #475569;
+}
+
+.learn-section ul {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+}
+
+.contact-page .learn-article,
+.legal-page .learn-article {
+  background: #ffffff;
+  border: 1px solid #e8edf2;
+  border-radius: 18px;
+  padding: clamp(1rem, 3vw, 1.8rem);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.contact-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0a9396;
+  background: rgba(10, 147, 150, 0.1);
+  border: 1px solid rgba(10, 147, 150, 0.25);
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+}
+
+.contact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.contact-meta span {
+  font-size: 0.86rem;
+  color: #0f766e;
+  background: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  border-radius: 999px;
+  padding: 0.32rem 0.72rem;
+}
+
+.contact-form {
+  max-width: 620px;
+}
+
+.contact-form .form-control {
+  border-radius: 10px;
+}
+
+.contact-note {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.legal-updated {
+  display: inline-block;
+  font-size: 0.86rem;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.38rem 0.65rem;
+}
+
+.policy-list li {
+  margin-bottom: 0.35rem;
+}
+
 [data-dark-mode] .site-footer {
   background: #111827;
   border-top-color: #334155;
@@ -1091,6 +1197,50 @@
 [data-dark-mode] .price-value,
 [data-dark-mode] .lead {
   color: #cbd5e1;
+}
+
+[data-dark-mode] .learn-title,
+[data-dark-mode] .learn-section h2 {
+  color: #f3f4f6;
+}
+
+[data-dark-mode] .learn-lead,
+[data-dark-mode] .learn-section p,
+[data-dark-mode] .learn-section li {
+  color: #cbd5e1;
+}
+
+[data-dark-mode] .learn-section {
+  border-bottom-color: #334155;
+}
+
+[data-dark-mode] .contact-page .learn-article,
+[data-dark-mode] .legal-page .learn-article {
+  background: #1f2937;
+  border-color: #334155;
+  box-shadow: none;
+}
+
+[data-dark-mode] .contact-badge {
+  color: #67e8f9;
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.25);
+}
+
+[data-dark-mode] .contact-meta span {
+  color: #99f6e4;
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-dark-mode] .contact-note,
+[data-dark-mode] .legal-updated {
+  color: #94a3b8;
+}
+
+[data-dark-mode] .legal-updated {
+  background: #0f172a;
+  border-color: #334155;
 }
 
 /* Sunset Silk Effect */
@@ -1602,7 +1752,7 @@
 .back-to-top-button::before {
   position: absolute;
   bottom: -20px;
-  content: "Back to Top";
+  content: "בחזרה ללמעלה";
   color: #ffffff;
   font-size: 0;
   white-space: nowrap;

@@ -6,9 +6,13 @@ function SiteFooter() {
       <div className="container py-4">
         <div className="row g-4">
           <div className="col-md-4">
-            <h6 className="footer-title">QR Master</h6>
+            <h6 className="footer-title">מחולל QR</h6>
+            <p className="footer-text mb-2">
+              מחולל QR מקצועי ליצירת קודים חכמים לאתרים, קבצים, אנשי קשר,
+              וואטסאפ ורשתות חברתיות.
+            </p>
             <p className="footer-text mb-0">
-              פלטפורמה פשוטה ליצירת QR קודים, התאמה אישית והורדה מיידית.
+              מהיר, מאובטח ונוח לשימוש — עם התאמה אישית מלאה והורדה מיידית.
             </p>
           </div>
 
@@ -19,38 +23,40 @@ function SiteFooter() {
                 <Link to="/">מחולל QR</Link>
               </li>
               <li>
-                <Link to="/learn-qr">לימוד QR</Link>
+                <Link to="/learn-qr">מה זה QR?</Link>
               </li>
-              <li>
-                <Link to="/api">API</Link>
-              </li>
-              <li>
-                <Link to="/pricing">Pricing</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="col-6 col-md-4">
-            <h6 className="footer-title">חשבון ומדיניות</h6>
-            <ul className="footer-links list-unstyled mb-0">
               <li>
                 <Link to="/login">התחברות</Link>
               </li>
               <li>
                 <Link to="/register">הרשמה</Link>
               </li>
+            </ul>
+          </div>
+
+          <div className="col-6 col-md-4">
+            <h6 className="footer-title">מידע ותמיכה</h6>
+            <ul className="footer-links list-unstyled mb-0">
               <li>
-                <a href="mailto:support@qrmaster.local">צור קשר</a>
+                <span className="footer-muted">שירות יציב וזמין</span>
               </li>
               <li>
-                <span className="footer-muted">פרטיות ותנאים - בקרוב</span>
+                <span className="footer-muted">
+                  שמירת QR אחרונים לחשבון שלך
+                </span>
+              </li>
+              <li>
+                <Link to="/contact">צור קשר</Link>
+              </li>
+              <li>
+                <Link to="/privacy-terms">מדיניות פרטיות ותנאי שימוש</Link>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="footer-bottom mt-4 pt-3">
-          © 2026 QR Master. All rights reserved.
+          All rights reserved · 2026 · menmen770 ©
         </div>
       </div>
     </footer>

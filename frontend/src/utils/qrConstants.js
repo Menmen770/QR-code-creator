@@ -64,23 +64,23 @@ export const CORNER_SHAPES = [
 ];
 
 export const QR_TYPES_MAIN = [
-  { value: "url", label: "Website", icon: IconLink },
-  { value: "pdf", label: "PDF", icon: IconFileText },
-  { value: "email", label: "Email", icon: IconMail },
-  { value: "contact", label: "VCard", icon: IconUser },
-  { value: "whatsapp", label: "WhatsApp", icon: IconBrandWhatsapp },
-  { value: "phone", label: "Phone", icon: IconPhone },
-  { value: "sms", label: "SMS", icon: IconMessageCircle },
+  { value: "url", label: "אתר", icon: IconLink },
+  { value: "pdf", label: "קובץ PDF", icon: IconFileText },
+  { value: "email", label: "אימייל", icon: IconMail },
+  { value: "contact", label: "איש קשר", icon: IconUser },
+  { value: "whatsapp", label: "וואטסאפ", icon: IconBrandWhatsapp },
+  { value: "phone", label: "טלפון", icon: IconPhone },
+  { value: "sms", label: "הודעת SMS", icon: IconMessageCircle },
 ];
 
 export const QR_TYPES_MORE = [
-  { value: "wifi", label: "WiFi", icon: IconWifi },
-  { value: "facebook", label: "Facebook", icon: IconBrandFacebook },
-  { value: "instagram", label: "Instagram", icon: IconBrandInstagram },
-  { value: "twitter", label: "Twitter/X", icon: IconBrandX },
-  { value: "linkedin", label: "LinkedIn", icon: IconBrandLinkedin },
-  { value: "youtube", label: "YouTube", icon: IconBrandYoutube },
-  { value: "tiktok", label: "TikTok", icon: IconBrandTiktok },
+  { value: "wifi", label: "Wi-Fi", icon: IconWifi },
+  { value: "facebook", label: "פייסבוק", icon: IconBrandFacebook },
+  { value: "instagram", label: "אינסטגרם", icon: IconBrandInstagram },
+  { value: "twitter", label: "X / טוויטר", icon: IconBrandX },
+  { value: "linkedin", label: "לינקדאין", icon: IconBrandLinkedin },
+  { value: "youtube", label: "יוטיוב", icon: IconBrandYoutube },
+  { value: "tiktok", label: "טיקטוק", icon: IconBrandTiktok },
 ];
 
 export const QR_TYPES = [...QR_TYPES_MAIN, ...QR_TYPES_MORE];
