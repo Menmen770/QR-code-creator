@@ -602,12 +602,177 @@
   .robot-widget {
     display: none;
   }
+  .back-to-top-button {
+    right: 18px;
+    bottom: 18px;
+  }
 }
 
 /* Background Effects for QR Preview */
 .qr-preview-effect {
   position: relative;
   background: #ffffff;
+}
+
+.header-links {
+  margin-inline-start: auto;
+  margin-inline-end: 1rem;
+}
+
+.header-link {
+  color: #5a5f63;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.header-link:hover {
+  color: #0a9396;
+}
+
+.site-footer {
+  background: #ffffff;
+  border-top: 1px solid #e6ebef;
+  margin-top: 3rem;
+}
+
+.footer-title {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+}
+
+.footer-text {
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+.footer-links li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #0a9396;
+}
+
+.footer-muted {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.footer-bottom {
+  border-top: 1px solid #eef2f5;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.info-hero {
+  background: linear-gradient(135deg, #f7fbfb 0%, #eef9f9 100%);
+  border: 1px solid #d9efef;
+  border-radius: 16px;
+  padding: 1.6rem;
+}
+
+.info-hero h1 {
+  color: #1f2937;
+  font-weight: 800;
+}
+
+.info-card {
+  background: #ffffff;
+  border: 1px solid #e7ebf0;
+  border-radius: 14px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.info-card h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.8rem;
+  color: #1f2937;
+}
+
+.info-card ul {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  color: #4b5563;
+  line-height: 1.8;
+}
+
+.price-card {
+  background: #ffffff;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  padding: 1.2rem;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
+}
+
+.price-card h4 {
+  color: #1f2937;
+  margin-bottom: 0.45rem;
+}
+
+.price-value {
+  color: #0a9396;
+  font-weight: 800;
+  font-size: 1.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.price-card ul {
+  color: #4b5563;
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  line-height: 1.8;
+}
+
+[data-dark-mode] .site-footer {
+  background: #111827;
+  border-top-color: #334155;
+}
+
+[data-dark-mode] .footer-title {
+  color: #e5e7eb;
+}
+
+[data-dark-mode] .footer-text,
+[data-dark-mode] .footer-links a,
+[data-dark-mode] .footer-bottom {
+  color: #9ca3af;
+}
+
+[data-dark-mode] .footer-links a:hover {
+  color: #2dd4bf;
+}
+
+[data-dark-mode] .footer-bottom {
+  border-top-color: #334155;
+}
+
+[data-dark-mode] .info-hero,
+[data-dark-mode] .info-card,
+[data-dark-mode] .price-card {
+  background: #1f2937;
+  border-color: #334155;
+}
+
+[data-dark-mode] .info-hero h1,
+[data-dark-mode] .info-card h3,
+[data-dark-mode] .price-card h4 {
+  color: #f3f4f6;
+}
+
+[data-dark-mode] .info-card ul,
+[data-dark-mode] .price-card ul,
+[data-dark-mode] .price-value,
+[data-dark-mode] .lead {
+  color: #cbd5e1;
 }
 
 /* Sunset Silk Effect */

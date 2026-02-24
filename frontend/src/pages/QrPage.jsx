@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   FiFileText,
   FiChevronDown,
@@ -16,7 +15,6 @@ import {
   QR_TYPES_MAIN,
   QR_TYPES_MORE,
 } from "../utils/qrConstants";
-import logo from "../assets/logo-full.png";
 import edge1 from "../assets/edges/1.svg";
 import edge2 from "../assets/edges/2.svg";
 import edge3 from "../assets/edges/3.svg";
@@ -132,32 +130,6 @@ function QrPage() {
   return (
     <div className="qr-page">
       <AccessibilityButton />
-      <header className="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm">
-        <div className="container py-2">
-          <button
-            className="navbar-brand d-flex align-items-center"
-            onClick={() => (window.location.href = "/")}
-            style={{
-              border: "none",
-              background: "none",
-              cursor: "pointer",
-              padding: 0,
-            }}
-            title="Back to home"
-          >
-            <img src={logo} alt="QR Master" className="brand-logo" />
-          </button>
-          <div className="d-flex gap-2">
-            <Link className="btn btn-outline-secondary btn-sm" to="/login">
-              Login
-            </Link>
-            <Link className="btn btn-teal btn-sm" to="/register">
-              Sign Up
-            </Link>
-          </div>
-        </div>
-      </header>
-
       <main className="container py-4">
         <section className="text-center mb-5">
           <h1 className="display-5 fw-bold">Free QR Code Generator</h1>

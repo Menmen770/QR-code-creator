@@ -5,11 +5,12 @@ const {
 } = require("qr-code-styling/lib/qr-code-styling.common.js");
 const nodeCanvas = require("canvas");
 const { JSDOM } = require("jsdom");
-const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const bcrypt = require("bcryptjs");
 const User = require("./models/User");
+const Person = require("./mongodb/models/person");
+const { connectMongoDB } = require("./mongodb/mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -40,6 +41,32 @@ const isEmailValid = (email) => {
 const isPhoneValid = (phone) => {
   if (typeof phone !== "string") return false;
   return /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
+};
+
+const isValidObjectId = (value) => /^[0-9a-fA-F]{24}$/.test(value);
+
+const normalizePersonPayload = (payload = {}) => {
+  const normalized = {
+    name: typeof payload.name === "string" ? payload.name.trim() : "",
+    phone: typeof payload.phone === "string" ? payload.phone.trim() : "",
+    email: typeof payload.email === "string" ? payload.email.trim() : "",
+    birthday: payload.birthday || null,
+    role: typeof payload.role === "string" ? payload.role.trim() : "user",
+  };
+
+  if (!normalized.phone) {
+    delete normalized.phone;
+  }
+
+  if (!normalized.email) {
+    delete normalized.email;
+  }
+
+  if (!normalized.birthday) {
+    delete normalized.birthday;
+  }
+
+  return normalized;
 };
 
 const addLogoWithCutout = async (
@@ -101,14 +128,7 @@ const addLogoWithCutout = async (
   return canvas.toBuffer("image/png");
 };
 
-if (process.env.MONGO_URI) {
-  mongoose
-    .connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB connected"))
-    .catch((err) => console.error("MongoDB connection error:", err));
-} else {
-  console.log("⚠️  MongoDB URI not configured (development mode)");
-}
+connectMongoDB();
 
 // Middleware
 app.use(
@@ -354,6 +374,119 @@ app.get("/api/auth/me", async (req, res) => {
   } catch (err) {
     console.error("Me error:", err);
     res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+// ====== PERSON CRUD ENDPOINTS ======
+app.post("/api/persons", async (req, res) => {
+  const personData = normalizePersonPayload(req.body);
+
+  if (!personData.name) {
+    return res.status(400).json({ error: "Name is required" });
+  }
+
+  if (personData.email && !isEmailValid(personData.email)) {
+    return res.status(400).json({ error: "Invalid email" });
+  }
+
+  if (personData.phone && !isPhoneValid(personData.phone)) {
+    return res.status(400).json({ error: "Invalid phone number" });
+  }
+
+  try {
+    const person = await Person.create(personData);
+    res.status(201).json({ person });
+  } catch (err) {
+    console.error("Create person error:", err);
+    res.status(500).json({ error: "Failed to create person" });
+  }
+});
+
+app.get("/api/persons", async (req, res) => {
+  try {
+    const persons = await Person.find().sort({ createdAt: -1 });
+    res.json({ persons });
+  } catch (err) {
+    console.error("Get persons error:", err);
+    res.status(500).json({ error: "Failed to fetch persons" });
+  }
+});
+
+app.get("/api/persons/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid person id" });
+  }
+
+  try {
+    const person = await Person.findById(id);
+    if (!person) {
+      return res.status(404).json({ error: "Person not found" });
+    }
+
+    res.json({ person });
+  } catch (err) {
+    console.error("Get person error:", err);
+    res.status(500).json({ error: "Failed to fetch person" });
+  }
+});
+
+app.put("/api/persons/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid person id" });
+  }
+
+  const personData = normalizePersonPayload(req.body);
+
+  if (!personData.name) {
+    return res.status(400).json({ error: "Name is required" });
+  }
+
+  if (personData.email && !isEmailValid(personData.email)) {
+    return res.status(400).json({ error: "Invalid email" });
+  }
+
+  if (personData.phone && !isPhoneValid(personData.phone)) {
+    return res.status(400).json({ error: "Invalid phone number" });
+  }
+
+  try {
+    const person = await Person.findByIdAndUpdate(id, personData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!person) {
+      return res.status(404).json({ error: "Person not found" });
+    }
+
+    res.json({ person });
+  } catch (err) {
+    console.error("Update person error:", err);
+    res.status(500).json({ error: "Failed to update person" });
+  }
+});
+
+app.delete("/api/persons/:id", async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid person id" });
+  }
+
+  try {
+    const person = await Person.findByIdAndDelete(id);
+    if (!person) {
+      return res.status(404).json({ error: "Person not found" });
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Delete person error:", err);
+    res.status(500).json({ error: "Failed to delete person" });
   }
 });
 
