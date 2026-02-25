@@ -45,17 +45,17 @@ export function useQrGenerator() {
   const getEffectBackground = (effectId) => {
     const gradients = {
       none: "#ffffff",
-      "sunset-silk": "linear-gradient(135deg, #FF512F 0%, #DD2476 100%)",
-      "warm-terracotta": "linear-gradient(135deg, #e5976e 0%, #7f4122 100%)",
-      "classic-peach": "linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%)",
-      "golden-hour": "linear-gradient(135deg, #F2994A 0%, #F2C94C 100%)",
-      "soft-rose": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      "desert-sand": "linear-gradient(135deg, #cc947c 0%, #8b5a44 100%)",
-      "ocean-breeze": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      "purple-dream": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-      "mint-fresh": "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
-      "coral-reef": "linear-gradient(135deg, #ff9a56 0%, #ff6a95 100%)",
-      "lavender-mist": "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+      "sunset-silk": "linear-gradient(135deg, #f97316 0%, #ec4899 100%)",
+      "warm-terracotta": "linear-gradient(135deg, #d6a57f 0%, #a16207 100%)",
+      "classic-peach": "linear-gradient(135deg, #fdba74 0%, #f9a8d4 100%)",
+      "golden-hour": "linear-gradient(135deg, #fbbf24 0%, #fb923c 100%)",
+      "soft-rose": "linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 100%)",
+      "desert-sand": "linear-gradient(135deg, #fde68a 0%, #fdba74 100%)",
+      "ocean-breeze": "linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%)",
+      "purple-dream": "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)",
+      "mint-fresh": "linear-gradient(135deg, #99f6e4 0%, #5eead4 100%)",
+      "coral-reef": "linear-gradient(135deg, #fdba74 0%, #fb7185 100%)",
+      "lavender-mist": "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
     };
     return gradients[effectId] || "#ffffff";
   };
@@ -288,15 +288,24 @@ export function useQrGenerator() {
     const img = new Image();
 
     img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
+      const isPng = format === "png";
+      const qrScale = isPng ? 1.12 : 1;
+      const extraPadding = isPng ? Math.round(img.width * 0.12) : 0;
+      const qrDrawWidth = Math.round(img.width * qrScale);
+      const qrDrawHeight = Math.round(img.height * qrScale);
+
+      canvas.width = qrDrawWidth + extraPadding * 2;
+      canvas.height = qrDrawHeight + extraPadding * 2;
+
+      const drawX = extraPadding;
+      const drawY = extraPadding;
 
       if (bgColorMode === "none") {
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
       } else if (bgColorMode === "solid") {
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
       } else if (bgColorMode === "effect" && bgEffect !== "none") {
         const gradientData = getEffectBackground(bgEffect);
         const gradientMatch = gradientData.match(
@@ -329,9 +338,9 @@ export function useQrGenerator() {
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
       } else {
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
       }
 
       canvas.toBlob((blob) => {

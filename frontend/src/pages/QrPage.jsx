@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   FiFileText,
   FiChevronDown,
@@ -9,7 +9,8 @@ import {
 import { useQrGenerator } from "../hooks";
 import {
   BG_EFFECTS,
-  PRESET_COLORS,
+  PRESET_QR_COLORS,
+  PRESET_BG_COLORS,
   BODY_SHAPES,
   CORNER_SHAPES,
   QR_TYPES_MAIN,
@@ -28,7 +29,6 @@ import body3 from "../assets/body/3.svg";
 import body4 from "../assets/body/4.svg";
 import body5 from "../assets/body/5.svg";
 import body6 from "../assets/body/6.svg";
-import AccessibilityButton from "../components/AccessibilityButton";
 
 function QrPage() {
   const qr = useQrGenerator();
@@ -81,20 +81,6 @@ function QrPage() {
 
   const [activeTab, setActiveTab] = useState("color");
   const [showMoreOptions, setShowMoreOptions] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   // Map edge images to corner shapes
   const edgeImages = {
@@ -118,7 +104,8 @@ function QrPage() {
   };
 
   const bgEffects = BG_EFFECTS;
-  const presetColors = PRESET_COLORS;
+  const qrPresetColors = PRESET_QR_COLORS;
+  const bgPresetColors = PRESET_BG_COLORS;
   const bodyShapes = BODY_SHAPES;
   const cornerShapes = CORNER_SHAPES;
   const qrTypesMain = QR_TYPES_MAIN;
@@ -148,9 +135,11 @@ function QrPage() {
   const tabClass = (tabName) =>
     `nav-link ${activeTab === tabName ? "active" : ""}`;
 
+  const bgModeClass = (mode) =>
+    `nav-link ${bgColorMode === mode ? "active" : ""}`;
+
   return (
     <div className="qr-page">
-      <AccessibilityButton />
       <main className="container py-4">
         <section className="text-center mb-5">
           <h1 className="display-5 fw-bold">מחולל QR בעיצוב אישי</h1>
@@ -237,7 +226,7 @@ function QrPage() {
                     <div className="d-flex gap-2 mb-3">
                       <button
                         type="button"
-                        className={`btn ${pdfInputMode === "file" ? "btn-primary" : "btn-outline-secondary"}`}
+                        className={`btn pdf-input-mode-btn ${pdfInputMode === "file" ? "btn-primary" : "btn-outline-secondary"}`}
                         onClick={() => setPdfInputMode("file")}
                       >
                         <FiFileText className="me-2" />
@@ -245,7 +234,7 @@ function QrPage() {
                       </button>
                       <button
                         type="button"
-                        className={`btn ${pdfInputMode === "url" ? "btn-primary" : "btn-outline-secondary"}`}
+                        className={`btn pdf-input-mode-btn ${pdfInputMode === "url" ? "btn-primary" : "btn-outline-secondary"}`}
                         onClick={() => setPdfInputMode("url")}
                       >
                         <FiLink className="me-2" />
@@ -642,40 +631,42 @@ function QrPage() {
 
             <div className="card qr-card shadow-sm flex-grow-1">
               <div className="card-body p-4 d-flex flex-column">
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <span className="qr-step">2</span>
-                  <h5 className="mb-0">התאם את העיצוב</h5>
-                </div>
+                <div className="qr-style-header-row mb-3">
+                  <div className="d-flex align-items-center gap-3">
+                    <span className="qr-step">2</span>
+                    <h5 className="mb-0">התאם את העיצוב</h5>
+                  </div>
 
-                <ul className="nav nav-pills qr-tabs mb-3" role="tablist">
-                  <li className="nav-item" role="presentation">
-                    <button
-                      type="button"
-                      className={tabClass("color")}
-                      onClick={() => setActiveTab("color")}
-                    >
-                      צבע
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      type="button"
-                      className={tabClass("shape")}
-                      onClick={() => setActiveTab("shape")}
-                    >
-                      צורה
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      type="button"
-                      className={tabClass("logo")}
-                      onClick={() => setActiveTab("logo")}
-                    >
-                      לוגו
-                    </button>
-                  </li>
-                </ul>
+                  <ul className="nav nav-pills qr-tabs" role="tablist">
+                    <li className="nav-item" role="presentation">
+                      <button
+                        type="button"
+                        className={tabClass("color")}
+                        onClick={() => setActiveTab("color")}
+                      >
+                        צבע
+                      </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        type="button"
+                        className={tabClass("shape")}
+                        onClick={() => setActiveTab("shape")}
+                      >
+                        צורה
+                      </button>
+                    </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        type="button"
+                        className={tabClass("logo")}
+                        onClick={() => setActiveTab("logo")}
+                      >
+                        לוגו
+                      </button>
+                    </li>
+                  </ul>
+                </div>
 
                 {activeTab === "color" && (
                   <div className="vstack gap-4">
@@ -686,8 +677,8 @@ function QrPage() {
                       </label>
 
                       {/* Color Selection */}
-                      <div className="d-flex gap-2 flex-wrap">
-                        {presetColors.map((color) => (
+                      <div className="d-flex gap-2 flex-wrap qr-color-palette">
+                        {qrPresetColors.map((color) => (
                           <button
                             key={color.hex}
                             onClick={() => setFgColor(color.hex)}
@@ -766,82 +757,49 @@ function QrPage() {
                     {/* Background Section */}
                     <hr className="my-2" />
                     <div className="qr-bg-section">
-                      <label className="form-label fw-bold mb-3">רקע</label>
+                      <div className="qr-bg-mode-row mb-3">
+                        <label className="form-label fw-bold mb-0">רקע</label>
 
-                      {/* Mode Selection */}
-                      <div className="d-flex gap-2 mb-3">
-                        <button
-                          onClick={() => setBgColorMode("none")}
-                          style={{
-                            flex: 1,
-                            padding: "8px 16px",
-                            borderRadius: "8px",
-                            border:
-                              bgColorMode === "none"
-                                ? "2px solid #0a9396"
-                                : "1px solid #d1d5db",
-                            backgroundColor:
-                              bgColorMode === "none" ? "#f0fffe" : "#ffffff",
-                            color:
-                              bgColorMode === "none" ? "#0a9396" : "#6b7280",
-                            fontWeight: bgColorMode === "none" ? "600" : "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                          }}
+                        <ul
+                          className="nav nav-pills qr-tabs qr-bg-mode-tabs"
+                          role="tablist"
                         >
-                          ללא רקע
-                        </button>
-                        <button
-                          onClick={() => setBgColorMode("solid")}
-                          style={{
-                            flex: 1,
-                            padding: "8px 16px",
-                            borderRadius: "8px",
-                            border:
-                              bgColorMode === "solid"
-                                ? "2px solid #0a9396"
-                                : "1px solid #d1d5db",
-                            backgroundColor:
-                              bgColorMode === "solid" ? "#f0fffe" : "#ffffff",
-                            color:
-                              bgColorMode === "solid" ? "#0a9396" : "#6b7280",
-                            fontWeight: bgColorMode === "solid" ? "600" : "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          צבע אחיד
-                        </button>
-                        <button
-                          onClick={() => setBgColorMode("effect")}
-                          style={{
-                            flex: 1,
-                            padding: "8px 16px",
-                            borderRadius: "8px",
-                            border:
-                              bgColorMode === "effect"
-                                ? "2px solid #0a9396"
-                                : "1px solid #d1d5db",
-                            backgroundColor:
-                              bgColorMode === "effect" ? "#f0fffe" : "#ffffff",
-                            color:
-                              bgColorMode === "effect" ? "#0a9396" : "#6b7280",
-                            fontWeight:
-                              bgColorMode === "effect" ? "600" : "500",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          אפקט
-                        </button>
+                          <li className="nav-item" role="presentation">
+                            <button
+                              type="button"
+                              className={bgModeClass("none")}
+                              onClick={() => setBgColorMode("none")}
+                            >
+                              ללא רקע
+                            </button>
+                          </li>
+                          <li className="nav-item" role="presentation">
+                            <button
+                              type="button"
+                              className={bgModeClass("solid")}
+                              onClick={() => setBgColorMode("solid")}
+                            >
+                              צבע אחיד
+                            </button>
+                          </li>
+                          <li className="nav-item" role="presentation">
+                            <button
+                              type="button"
+                              className={bgModeClass("effect")}
+                              onClick={() => setBgColorMode("effect")}
+                            >
+                              אפקט
+                            </button>
+                          </li>
+                        </ul>
                       </div>
 
                       {/* Color Selection */}
                       {bgColorMode !== "none" && (
-                        <div className="d-flex gap-2 flex-wrap">
+                        <div className="d-flex gap-2 flex-wrap qr-color-palette">
                           {bgColorMode === "solid" ? (
                             <>
-                              {presetColors.map((color) => (
+                              {bgPresetColors.map((color) => (
                                 <button
                                   key={color.hex}
                                   onClick={() => setBgColor(color.hex)}
@@ -1284,17 +1242,6 @@ function QrPage() {
           Built for your portfolio · Privacy · Terms
         </div>
       </footer>
-
-      <button
-        type="button"
-        className={`back-to-top-button ${showBackToTop ? "visible" : ""}`}
-        onClick={scrollToTop}
-        aria-label="בחזרה ללמעלה"
-      >
-        <svg className="back-to-top-icon" viewBox="0 0 384 512">
-          <path d="M214.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-160 160c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 141.2V448c0 17.7 14.3 32 32 32s32-14.3 32-32V141.2L329.4 246.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-160-160z" />
-        </svg>
-      </button>
     </div>
   );
 }

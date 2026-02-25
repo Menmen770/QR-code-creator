@@ -8,6 +8,8 @@ import ContactPage from "./pages/ContactPage";
 import PrivacyTermsPage from "./pages/PrivacyTermsPage";
 import MainNavbar from "./components/MainNavbar";
 import SiteFooter from "./components/SiteFooter";
+import AccessibilityButton from "./components/AccessibilityButton";
+import BackToTopButton from "./components/BackToTopButton";
 
 function ProtectedLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -53,6 +55,8 @@ function App() {
   return (
     <>
       <MainNavbar />
+      <AccessibilityButton />
+      <BackToTopButton />
       <Routes>
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<QrPage />} />

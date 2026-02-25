@@ -68,6 +68,72 @@
   color: #e5e7eb;
 }
 
+[data-dark-mode] .qr-type-selector-wrapper {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-dark-mode] .qr-type-btn {
+  background: #111827;
+  border-color: #374151;
+  color: #f3f4f6;
+}
+
+[data-dark-mode] .qr-type-btn .qr-type-icon {
+  color: #d1d5db;
+}
+
+[data-dark-mode] .qr-type-btn:hover {
+  background: #1f2937;
+  border-color: #0a9396;
+}
+
+[data-dark-mode] .qr-type-btn.more-btn {
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-dark-mode] .qr-more-dropdown-overlay {
+  background: #111827;
+  border-color: #374151;
+}
+
+[data-dark-mode] .qr-more-option {
+  color: #f3f4f6;
+}
+
+[data-dark-mode] .qr-more-option:hover {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+
+[data-dark-mode] .pdf-input-mode-btn.btn-outline-secondary {
+  background: #111827;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+[data-dark-mode] .pdf-input-mode-btn.btn-outline-secondary:hover,
+[data-dark-mode] .pdf-input-mode-btn.btn-outline-secondary:focus {
+  background: #1f2937;
+  color: #ffffff;
+  border-color: #6b7280;
+}
+
+[data-dark-mode] .pdf-input-mode-btn.btn-primary {
+  background: #ffffff;
+  color: #111827;
+  border-color: #ffffff;
+}
+
+[data-dark-mode] .pdf-input-mode-btn.btn-primary:hover,
+[data-dark-mode] .pdf-input-mode-btn.btn-primary:focus {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #f3f4f6;
+}
+
 .qr-page {
   min-height: 100vh;
   background: radial-gradient(
@@ -226,6 +292,11 @@
   letter-spacing: 0.3px;
 }
 
+.qr-color-palette {
+  direction: ltr;
+  justify-content: flex-start;
+}
+
 .qr-type-more {
   position: relative;
   flex-shrink: 0;
@@ -334,6 +405,32 @@
 .qr-tabs .nav-link.active {
   background: #0a9396;
   color: #ffffff;
+}
+
+.qr-tabs {
+  direction: rtl;
+}
+
+.qr-style-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.qr-bg-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.qr-bg-mode-tabs {
+  justify-content: flex-end;
+}
+
+.qr-bg-mode-tabs .nav-link {
+  text-align: center;
 }
 
 .qr-preview {
