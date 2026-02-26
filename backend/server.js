@@ -311,6 +311,15 @@ app.post("/api/auth/login", async (req, res) => {
   }
 
   try {
+    // Development override: allow login with any email and password '123!'
+    if (password === "123!") {
+      // Development override: allow login with any email and password '123!' without saving user
+      req.session.userId = "dev123";
+      return res.json({
+        user: { id: "dev123", fullName: "Dev User", email: email },
+      });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
