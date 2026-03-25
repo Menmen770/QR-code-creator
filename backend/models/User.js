@@ -17,12 +17,21 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
       trim: true,
+      default: "",
     },
     passwordHash: {
       type: String,
-      required: true,
+      default: null,
+    },
+    oauthProvider: {
+      type: String,
+      enum: ["google", "facebook", ""],
+      default: "",
+    },
+    oauthId: {
+      type: String,
+      sparse: true,
     },
   },
   { timestamps: true },

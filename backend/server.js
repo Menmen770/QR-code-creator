@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const FacebookStrategy = require("passport-facebook").Strategy;
 const {
   QRCodeStyling,
 } = require("qr-code-styling/lib/qr-code-styling.common.js");
@@ -12,35 +15,123 @@ const User = require("./models/User");
 const { connectMongoDB } = require("./mongodb/mongodb");
 require("dotenv").config();
 
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 const app = express();
-const PORT = 5000;
-const CLIENT_ORIGINS = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5175",
-  "http://localhost:5176",
-  "http://localhost:5177",
-  "http://localhost:5178",
-];
+const PORT = process.env.PORT || 5000;
 
-const isPasswordValid = (password) => {
-  if (typeof password !== "string") return false;
-  if (password.length < 7) return false;
-  if (!/^[\p{L}\p{N}]+$/u.test(password)) return false;
-  if (!/\p{L}/u.test(password)) return false;
-  if (!/\p{N}/u.test(password)) return false;
-  return true;
+// Middleware
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  }),
+);
+app.use(express.json());
+
+// Configure session store
+let sessionStore;
+if (process.env.MONGO_URI) {
+  sessionStore = MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: "sessions",
+  });
+} else {
+  console.log("⚠️  Using in-memory session store (development mode)");
+  sessionStore = new session.MemoryStore();
+}
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "dev-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
+    store: sessionStore,
+  }),
+);
+
+connectMongoDB();
+
+app.use(passport.initialize());
+
+const oauthCallback = (provider) => async (accessToken, refreshToken, profile, done) => {
+  try {
+    const email = profile.emails?.[0]?.value?.toLowerCase();
+    const fullName = profile.displayName || profile.name?.givenName || "User";
+    if (!email) return done(new Error("אימייל לא התקבל מהספק"));
+
+    let user = await User.findOne({
+      $or: [
+        { email },
+        { oauthProvider: provider, oauthId: profile.id },
+      ],
+    });
+
+    if (user) {
+      if (!user.oauthProvider) {
+        user.oauthProvider = provider;
+        user.oauthId = profile.id;
+        await user.save();
+      }
+    } else {
+      user = await User.create({
+        fullName,
+        email,
+        phone: "",
+        passwordHash: null,
+        oauthProvider: provider,
+        oauthId: profile.id,
+      });
+    }
+    return done(null, user);
+  } catch (err) {
+    return done(err, null);
+  }
 };
 
-const isEmailValid = (email) => {
-  if (typeof email !== "string") return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/google/callback`,
+      },
+      oauthCallback("google")
+    )
+  );
+}
+
+if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_APP_ID,
+        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: `${process.env.BACKEND_URL || "http://localhost:5000"}/api/auth/facebook/callback`,
+        profileFields: ["id", "displayName", "emails"],
+      },
+      oauthCallback("facebook")
+    )
+  );
+}
+
+const requireAuth = (req, res, next) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
 };
 
-const isPhoneValid = (phone) => {
-  if (typeof phone !== "string") return false;
-  return /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
-};
+app.get("/", (req, res) => {
+  res.send("The QR Server is UP and running! 🚀");
+});
 
 const addLogoWithCutout = async (
   qrBuffer,
@@ -48,10 +139,8 @@ const addLogoWithCutout = async (
   logoShape = "square",
 ) => {
   const qrImage = await nodeCanvas.loadImage(qrBuffer);
-
   const canvas = nodeCanvas.createCanvas(qrImage.width, qrImage.height);
   const ctx = canvas.getContext("2d");
-
   ctx.drawImage(qrImage, 0, 0);
 
   const centerX = qrImage.width / 2;
@@ -101,58 +190,6 @@ const addLogoWithCutout = async (
   return canvas.toBuffer("image/png");
 };
 
-connectMongoDB();
-
-// Middleware
-app.use(
-  cors({
-    origin: CLIENT_ORIGINS,
-    credentials: true,
-  }),
-); // מאפשר לריאקט (שיושב על פורט אחר) לדבר עם השרת
-app.use(express.json()); // מאפשר לשרת לקרוא מידע בפורמט JSON
-
-// Configure session store - use MongoDB if available, fallback to memory store for development
-let sessionStore;
-if (process.env.MONGO_URI) {
-  sessionStore = MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    collectionName: "sessions",
-  });
-} else {
-  console.log("⚠️  Using in-memory session store (development mode)");
-  sessionStore = new session.MemoryStore();
-}
-
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "dev-secret",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24,
-      sameSite: "lax",
-    },
-    store: sessionStore,
-  }),
-);
-
-const requireAuth = (req, res, next) => {
-  if (!req.session.userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  next();
-};
-
-// ה-Route הראשון שלנו - בדיקה שהשרת עובד
-app.get("/", (req, res) => {
-  res.send("The QR Server is UP and running! 🚀");
-});
-
-// ====== QR CODE GENERATION ENDPOINT ======
-// מקבל: POST request עם text, color, bgColor, dotsType, cornersType
-// מחזיר: QR Code כתמונה Base64 עם צורות מותאמות אישית
 app.post("/api/generate-qr", async (req, res) => {
   const {
     text,
@@ -167,26 +204,11 @@ app.post("/api/generate-qr", async (req, res) => {
     errorCorrectionLevel = "Q",
   } = req.body;
 
-  console.log("QR Request:", {
-    text,
-    color,
-    bgColor,
-    dotsType,
-    cornersType,
-    dotsGradient: !!dotsGradient,
-    bgGradient: !!bgGradient,
-    image: !!image,
-    logoShape,
-    errorCorrectionLevel,
-  });
-
   if (!text) {
-    console.log("Error: Text is empty");
     return res.status(400).json({ error: "Text is required" });
   }
 
   try {
-    // Build dotsOptions
     const dotsOptions = {
       color: color || "#000000",
       type: dotsType,
@@ -195,7 +217,6 @@ app.post("/api/generate-qr", async (req, res) => {
       dotsOptions.gradient = dotsGradient;
     }
 
-    // Build backgroundOptions
     const backgroundOptions = {
       color: bgColor === "transparent" ? "rgba(0,0,0,0)" : bgColor || "#FFFFFF",
     };
@@ -203,7 +224,6 @@ app.post("/api/generate-qr", async (req, res) => {
       backgroundOptions.gradient = bgGradient;
     }
 
-    // Build QR options object
     const options = {
       width: 400,
       height: 400,
@@ -229,10 +249,7 @@ app.post("/api/generate-qr", async (req, res) => {
       },
     };
 
-    console.log("QRCodeStyling options created with all parameters");
     const qrCode = new QRCodeStyling(options);
-
-    console.log("QRCodeStyling instance created with dotsType:", dotsType);
     const qrBuffer = await qrCode.getRawData("png");
     let finalBuffer = qrBuffer;
 
@@ -240,43 +257,20 @@ app.post("/api/generate-qr", async (req, res) => {
       finalBuffer = await addLogoWithCutout(qrBuffer, image, logoShape);
     }
 
-    console.log("PNG buffer generated, size:", finalBuffer.length, "bytes");
-
     const base64 = finalBuffer.toString("base64");
     const qrImage = `data:image/png;base64,${base64}`;
-
-    console.log("QR Code generated successfully with all options applied");
     res.json({ qrImage });
   } catch (err) {
     console.error("QR Generation Error:", err.message);
-    console.error("Full error:", err);
-    res
-      .status(500)
-      .json({ error: "Failed to generate QR code", details: err.message });
+    res.status(500).json({ error: "Failed to generate QR code" });
   }
 });
 
-// ====== AUTH ENDPOINTS ======
 app.post("/api/auth/register", async (req, res) => {
   const { fullName, email, phone, password } = req.body;
 
   if (!fullName || !email || !phone || !password) {
     return res.status(400).json({ error: "All fields are required" });
-  }
-
-  if (!isEmailValid(email)) {
-    return res.status(400).json({ error: "Invalid email" });
-  }
-
-  if (!isPhoneValid(phone)) {
-    return res.status(400).json({ error: "Invalid phone number" });
-  }
-
-  if (!isPasswordValid(password)) {
-    return res.status(400).json({
-      error:
-        "Password must be 7+ chars, include letters (English/Hebrew) and numbers, and use only letters/numbers",
-    });
   }
 
   try {
@@ -295,7 +289,12 @@ app.post("/api/auth/register", async (req, res) => {
 
     req.session.userId = user._id.toString();
     res.status(201).json({
-      user: { id: user._id, fullName: user.fullName, email: user.email },
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+      },
     });
   } catch (err) {
     console.error("Register error:", err);
@@ -316,6 +315,9 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    if (!user.passwordHash) {
+      return res.status(401).json({ error: "החשבון נוצר עם גוגל/פייסבוק – השתמש בהתחברות חברתית" });
+    }
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -323,7 +325,12 @@ app.post("/api/auth/login", async (req, res) => {
 
     req.session.userId = user._id.toString();
     res.json({
-      user: { id: user._id, fullName: user.fullName, email: user.email },
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+      },
     });
   } catch (err) {
     console.error("Login error:", err);
@@ -342,7 +349,6 @@ app.get("/api/auth/me", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
   try {
     const user = await User.findById(req.session.userId).select(
       "fullName email phone",
@@ -352,52 +358,59 @@ app.get("/api/auth/me", async (req, res) => {
     }
     res.json({ user });
   } catch (err) {
-    console.error("Me error:", err);
     res.status(500).json({ error: "Failed to fetch user" });
   }
 });
 
 app.put("/api/auth/profile", requireAuth, async (req, res) => {
   const { fullName, phone } = req.body;
-
-  if (!fullName || typeof fullName !== "string" || fullName.trim().length < 2) {
-    return res
-      .status(400)
-      .json({ error: "Full name must be at least 2 characters" });
-  }
-
-  if (!phone || !isPhoneValid(phone)) {
-    return res.status(400).json({ error: "Invalid phone number" });
-  }
-
   try {
     const user = await User.findByIdAndUpdate(
       req.session.userId,
-      {
-        fullName: fullName.trim(),
-        phone: phone.trim(),
-      },
-      {
-        new: true,
-        runValidators: true,
-      },
+      { fullName: fullName || undefined, phone: phone || undefined },
+      { new: true },
     ).select("fullName email phone");
-
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(401).json({ error: "Unauthorized" });
     }
-
     res.json({ user });
   } catch (err) {
-    console.error("Profile update error:", err);
     res.status(500).json({ error: "Failed to update profile" });
   }
 });
 
-// הפעלת השרת
+app.get("/api/auth/google", (req, res, next) => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(503).json({ error: "התחברות עם גוגל אינה מופעלת" });
+  }
+  passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+});
+
+app.get(
+  "/api/auth/google/callback",
+  passport.authenticate("google", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=google` }),
+  (req, res) => {
+    req.session.userId = req.user._id.toString();
+    res.redirect(FRONTEND_URL);
+  }
+);
+
+app.get("/api/auth/facebook", (req, res, next) => {
+  if (!process.env.FACEBOOK_APP_ID) {
+    return res.status(503).json({ error: "התחברות עם פייסבוק אינה מופעלת" });
+  }
+  passport.authenticate("facebook", { scope: ["email"] })(req, res, next);
+});
+
+app.get(
+  "/api/auth/facebook/callback",
+  passport.authenticate("facebook", { session: false, failureRedirect: `${FRONTEND_URL}/login?error=facebook` }),
+  (req, res) => {
+    req.session.userId = req.user._id.toString();
+    res.redirect(FRONTEND_URL);
+  }
+);
+
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(
-    `POST http://localhost:${PORT}/api/generate-qr - Generate QR Code`,
-  );
+  console.log(`Server is running on port ${PORT}`);
 });
