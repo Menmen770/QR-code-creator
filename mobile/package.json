@@ -1,0 +1,44 @@
+{
+  "name": "qr-code-creator-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo/AppEntry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "android:tunnel": "expo start --tunnel --android --clear",
+    "android:offline": "expo start --android --offline",
+    "android:metro": "expo start --offline",
+    "emu:start": "start \"\" \"%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe\" -avd Pixel_9_Pro -no-snapshot -scale 0.6",
+    "emu:start:sw": "start \"\" \"%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe\" -avd Pixel_9_Pro -no-snapshot -gpu swiftshader_indirect -scale 0.6",
+    "emu:start:medium": "start \"\" \"%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe\" -avd Medium_Phone_API_36.1 -no-snapshot -gpu swiftshader_indirect -scale 0.6",
+    "go": "npm run emu:start && timeout /t 8 >nul && expo start --android --offline",
+    "go:tunnel": "npm run emu:start && timeout /t 12 >nul && expo start --tunnel --android --clear",
+    "phone": "expo start --tunnel",
+    "phone:lan": "expo start",
+    "phone:ip": "powershell -Command \"(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -notmatch 'Loopback' -and $_.IPAddress -notmatch '^169' } | Select-Object -First 1).IPAddress\"",
+    "doctor:android": "npx expo-doctor",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/native": "^7.1.33",
+    "@react-navigation/native-stack": "^7.14.4",
+    "@tabler/icons-react-native": "^3.40.0",
+    "expo": "^54.0.33",
+    "expo-camera": "~17.0.10",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-svg": "15.12.1"
+  },
+  "devDependencies": {
+    "@expo/ngrok": "^4.1.3",
+    "@types/react": "~19.1.0",
+    "babel-preset-expo": "~54.0.10",
+    "typescript": "~5.9.2"
+  }
+}
