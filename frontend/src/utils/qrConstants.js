@@ -15,6 +15,8 @@ import {
   IconBrandTiktok,
 } from "@tabler/icons-react";
 
+import { STICKER_IMAGE_FRAMES } from "../assets/stickerAssets";
+
 export const BG_EFFECTS = [
   { id: "none", name: "ללא אפקט" },
   { id: "sunset-silk", name: "שקיעה רכה" },
@@ -75,6 +77,11 @@ export const CORNER_SHAPES = [
   { id: "classy", name: "Classy" },
   { id: "classy-rounded", name: "Classy Rounded" },
   { id: "dots", name: "Dots" },
+];
+
+export const STICKER_OPTIONS = [
+  { id: "none", name: "ללא" },
+  ...STICKER_IMAGE_FRAMES,
 ];
 
 export const QR_TYPES_MAIN = [

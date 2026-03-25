@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  FiFileText,
-  FiChevronDown,
-  FiEdit2,
-  FiLink,
-  FiX,
-} from "react-icons/fi";
+import { FiFileText, FiChevronDown, FiLink, FiX } from "react-icons/fi";
 import { useQrGenerator } from "../hooks";
 import {
   BG_EFFECTS,
@@ -13,6 +7,7 @@ import {
   PRESET_BG_COLORS,
   BODY_SHAPES,
   CORNER_SHAPES,
+  STICKER_OPTIONS,
   QR_TYPES_MAIN,
   QR_TYPES_MORE,
 } from "../utils/qrConstants";
@@ -29,6 +24,10 @@ import body3 from "../assets/body/3.svg";
 import body4 from "../assets/body/4.svg";
 import body5 from "../assets/body/5.svg";
 import body6 from "../assets/body/6.svg";
+import StickerPreview from "../components/StickerPreview";
+import QrCustomColorButton from "../components/QrCustomColorButton";
+import WhyUsSection from "../components/WhyUsSection";
+import PromotionalMaterialsSection from "../components/PromotionalMaterialsSection";
 
 function QrPage() {
   const qr = useQrGenerator();
@@ -40,6 +39,7 @@ function QrPage() {
     fgColor,
     setFgColor,
     qrImage,
+    previewImage,
     loading,
     error,
     bgColorMode,
@@ -64,6 +64,8 @@ function QrPage() {
     setLogoInputMode,
     logoShape,
     setLogoShape,
+    stickerType,
+    setStickerType,
     qrInputs,
     handleQRTypeChange,
     handleInputChange,
@@ -108,6 +110,7 @@ function QrPage() {
   const bgPresetColors = PRESET_BG_COLORS;
   const bodyShapes = BODY_SHAPES;
   const cornerShapes = CORNER_SHAPES;
+  const stickerOptions = STICKER_OPTIONS;
   const qrTypesMain = QR_TYPES_MAIN;
   const qrTypesMore = QR_TYPES_MORE;
   const qrTypeTitleMap = {
@@ -665,6 +668,15 @@ function QrPage() {
                         לוגו
                       </button>
                     </li>
+                    <li className="nav-item" role="presentation">
+                      <button
+                        type="button"
+                        className={tabClass("sticker")}
+                        onClick={() => setActiveTab("sticker")}
+                      >
+                        סטיקר
+                      </button>
+                    </li>
                   </ul>
                 </div>
 
@@ -708,48 +720,11 @@ function QrPage() {
                             }
                           />
                         ))}
-                        <button
-                          onClick={() =>
-                            document
-                              .getElementById("fgCustomColorInput")
-                              .click()
-                          }
-                          style={{
-                            width: "48px",
-                            height: "48px",
-                            backgroundColor: fgColor,
-                            border: "3px solid #0a9396",
-                            borderRadius: "50%",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease",
-                            boxShadow: "0 4px 12px rgba(10, 147, 150, 0.4)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: 0,
-                          }}
-                          title="צבע מותאם אישית"
-                          onMouseEnter={(e) =>
-                            (e.target.style.transform = "scale(1.1)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.target.style.transform = "scale(1)")
-                          }
-                        >
-                          <FiEdit2
-                            size={20}
-                            color="#fff"
-                            style={{
-                              filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
-                            }}
-                          />
-                        </button>
-                        <input
-                          id="fgCustomColorInput"
-                          type="color"
+                        <QrCustomColorButton
                           value={fgColor}
-                          onChange={(e) => setFgColor(e.target.value)}
-                          style={{ display: "none" }}
+                          onChange={setFgColor}
+                          title="צבע מותאם אישית"
+                          variant="foreground"
                         />
                       </div>
                     </div>
@@ -829,52 +804,11 @@ function QrPage() {
                                   }
                                 />
                               ))}
-                              <button
-                                onClick={() =>
-                                  document
-                                    .getElementById("bgCustomColorInput")
-                                    .click()
-                                }
-                                style={{
-                                  width: "48px",
-                                  height: "48px",
-                                  backgroundColor: bgColor,
-                                  border: "3px solid #0a9396",
-                                  borderRadius: "50%",
-                                  cursor: "pointer",
-                                  transition: "all 0.2s ease",
-                                  boxShadow:
-                                    "0 4px 12px rgba(10, 147, 150, 0.4)",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  padding: 0,
-                                }}
-                                title="צבע מותאם אישית"
-                                onMouseEnter={(e) =>
-                                  (e.target.style.transform = "scale(1.1)")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.target.style.transform = "scale(1)")
-                                }
-                              >
-                                <FiEdit2
-                                  size={20}
-                                  color={
-                                    bgColor === "#ffffff" ? "#000" : "#fff"
-                                  }
-                                  style={{
-                                    filter:
-                                      "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
-                                  }}
-                                />
-                              </button>
-                              <input
-                                id="bgCustomColorInput"
-                                type="color"
+                              <QrCustomColorButton
                                 value={bgColor}
-                                onChange={(e) => setBgColor(e.target.value)}
-                                style={{ display: "none" }}
+                                onChange={setBgColor}
+                                title="צבע מותאם אישית"
+                                variant="background"
                               />
                             </>
                           ) : (
@@ -990,6 +924,35 @@ function QrPage() {
                           );
                         })}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "sticker" && (
+                  <div className="qr-sticker-section">
+                    <label className="form-label fw-bold mb-3">
+                      בחר סטיקר
+                    </label>
+                    <div className="qr-sticker-grid">
+                      {stickerOptions.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={`qr-sticker-btn ${stickerType === opt.id ? "selected" : ""}`}
+                          onClick={() => setStickerType(opt.id)}
+                          title={opt.name}
+                        >
+                          {opt.thumbnail ? (
+                            <img
+                              src={opt.thumbnail}
+                              alt=""
+                              className="qr-sticker-thumb"
+                            />
+                          ) : (
+                            <StickerPreview type={opt.id} name={opt.name} />
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -1146,7 +1109,7 @@ function QrPage() {
                       : bgColorMode === "effect" && bgEffect !== "none"
                         ? `effect-${bgEffect}`
                         : ""
-                  }`}
+                  } ${stickerType !== "none" ? "qr-preview--with-sticker" : ""}`}
                   style={
                     bgColorMode === "effect" && bgEffect !== "none"
                       ? {}
@@ -1191,9 +1154,9 @@ function QrPage() {
                     ) &&
                     qrImage && (
                       <img
-                        src={qrImage}
+                        src={previewImage}
                         alt="קוד QR שנוצר"
-                        className="img-fluid qr-image"
+                        className={`img-fluid qr-image ${stickerType !== "none" ? "qr-image--sticker" : ""}`}
                       />
                     )}
                   {!loading &&
@@ -1235,6 +1198,9 @@ function QrPage() {
             </div>
           </div>
         </div>
+
+        <WhyUsSection />
+        <PromotionalMaterialsSection />
       </main>
 
       <footer className="qr-footer mt-5">

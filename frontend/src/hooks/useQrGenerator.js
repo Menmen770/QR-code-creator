@@ -1,4 +1,12 @@
 import { useEffect, useState } from "react";
+import { API_BASE } from "../config";
+import {
+  getStickerOverlayUrl,
+  isImageStickerId,
+  STICKER_QR_NORMALIZED_RECT,
+} from "../assets/stickerAssets";
+import { drawStickerImageComposite } from "../utils/stickerCompose";
+import { paintExportBackground } from "../utils/qrExportBackground";
 
 const RECENT_QR_KEY = "qrMasterRecentHistory";
 
@@ -24,6 +32,8 @@ export function useQrGenerator() {
   const [isLogoDragging, setIsLogoDragging] = useState(false);
   const [logoInputMode, setLogoInputMode] = useState("file");
   const [logoShape, setLogoShape] = useState("square");
+  const [stickerType, setStickerType] = useState("none");
+  const [previewWithSticker, setPreviewWithSticker] = useState("");
 
   const [qrInputs, setQrInputs] = useState({
     url: "https://example.com",
@@ -192,8 +202,13 @@ export function useQrGenerator() {
     setError("");
 
     try {
+      /* With sticker, QR must be transparent so step-3 background shows through the hole */
       const bgForAPI =
-        bgColorMode === "effect" || bgColorMode === "none" ? "transparent" : bg;
+        stickerType !== "none"
+          ? "transparent"
+          : bgColorMode === "effect" || bgColorMode === "none"
+            ? "transparent"
+            : bg;
 
       const requestBody = {
         text,
@@ -208,7 +223,7 @@ export function useQrGenerator() {
         requestBody.logoShape = logoShape;
       }
 
-      const response = await fetch("http://localhost:5000/api/generate-qr", {
+      const response = await fetch(`${API_BASE}/api/generate-qr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -254,12 +269,54 @@ export function useQrGenerator() {
     cornersType,
     logoUrl,
     logoShape,
+    stickerType,
   ]);
 
   useEffect(() => {
     generateQR(qrValue, fgColor, bgColor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!qrImage || stickerType === "none") {
+      setPreviewWithSticker("");
+      return;
+    }
+    const overlayUrl = getStickerOverlayUrl(stickerType);
+    if (!overlayUrl) {
+      setPreviewWithSticker("");
+      return;
+    }
+    const qrImg = new Image();
+    const overlayImg = new Image();
+    let qrOk = false;
+    let ovOk = false;
+    const tryComposite = () => {
+      if (!qrOk || !ovOk) return;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { alpha: true });
+      drawStickerImageComposite(
+        ctx,
+        qrImg,
+        overlayImg,
+        fgColor,
+        STICKER_QR_NORMALIZED_RECT,
+      );
+      setPreviewWithSticker(canvas.toDataURL("image/png"));
+    };
+    qrImg.onload = () => {
+      qrOk = true;
+      tryComposite();
+    };
+    overlayImg.onload = () => {
+      ovOk = true;
+      tryComposite();
+    };
+    qrImg.onerror = () => setPreviewWithSticker("");
+    overlayImg.onerror = () => setPreviewWithSticker("");
+    qrImg.src = qrImage;
+    overlayImg.src = overlayUrl;
+  }, [qrImage, stickerType, fgColor]);
 
   const downloadQR = (format) => {
     if (!qrImage) return;
@@ -284,7 +341,7 @@ export function useQrGenerator() {
     }
 
     const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: true });
     const img = new Image();
 
     img.onload = () => {
@@ -294,65 +351,56 @@ export function useQrGenerator() {
       const qrDrawWidth = Math.round(img.width * qrScale);
       const qrDrawHeight = Math.round(img.height * qrScale);
 
+      const hasSticker = isPng && stickerType !== "none" && isImageStickerId(stickerType);
+      const overlayUrl = hasSticker ? getStickerOverlayUrl(stickerType) : null;
+
+      const finishBlob = () => {
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `qr-code.${format}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, `image/${format}`);
+      };
+
+      const exportBgState = {
+        bgColorMode,
+        bgColor,
+        bgEffect,
+        getEffectBackground,
+      };
+
+      if (hasSticker && overlayUrl) {
+        const overlayImg = new Image();
+        overlayImg.onload = () => {
+          drawStickerImageComposite(
+            ctx,
+            img,
+            overlayImg,
+            fgColor,
+            STICKER_QR_NORMALIZED_RECT,
+            exportBgState,
+          );
+          finishBlob();
+        };
+        overlayImg.onerror = finishBlob;
+        overlayImg.src = overlayUrl;
+        return;
+      }
+
       canvas.width = qrDrawWidth + extraPadding * 2;
       canvas.height = qrDrawHeight + extraPadding * 2;
-
       const drawX = extraPadding;
       const drawY = extraPadding;
 
-      if (bgColorMode === "none") {
-        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
-      } else if (bgColorMode === "solid") {
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
-      } else if (bgColorMode === "effect" && bgEffect !== "none") {
-        const gradientData = getEffectBackground(bgEffect);
-        const gradientMatch = gradientData.match(
-          /linear-gradient\((\d+)deg,\s*([^)]+)\)/,
-        );
+      paintExportBackground(ctx, canvas.width, canvas.height, exportBgState);
+      ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
 
-        if (gradientMatch) {
-          const angle = parseInt(gradientMatch[1]);
-          const colorStops = gradientMatch[2].split(/,\s*(?![^()]*\))/);
-          const angleRad = (angle - 90) * (Math.PI / 180);
-          const x0 = canvas.width / 2 - Math.cos(angleRad) * (canvas.width / 2);
-          const y0 =
-            canvas.height / 2 - Math.sin(angleRad) * (canvas.height / 2);
-          const x1 = canvas.width / 2 + Math.cos(angleRad) * (canvas.width / 2);
-          const y1 =
-            canvas.height / 2 + Math.sin(angleRad) * (canvas.height / 2);
-
-          const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
-
-          colorStops.forEach((stop) => {
-            const match = stop.match(/([#\w]+)\s+(\d+)%/);
-            if (match) {
-              const color = match[1];
-              const position = parseInt(match[2]) / 100;
-              gradient.addColorStop(position, color);
-            }
-          });
-
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
-      } else {
-        ctx.drawImage(img, drawX, drawY, qrDrawWidth, qrDrawHeight);
-      }
-
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `qr-code.${format}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, `image/${format}`);
+      finishBlob();
     };
 
     img.src = qrImage;
@@ -368,6 +416,7 @@ export function useQrGenerator() {
     fgColor,
     setFgColor,
     qrImage,
+    previewImage: stickerType !== "none" && previewWithSticker ? previewWithSticker : qrImage,
     loading,
     error,
     fgColorMode,
@@ -396,6 +445,8 @@ export function useQrGenerator() {
     setLogoInputMode,
     logoShape,
     setLogoShape,
+    stickerType,
+    setStickerType,
     qrInputs,
     handleQRTypeChange,
     handleInputChange,
