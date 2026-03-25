@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import RobotSpline from "../components/RobotSpline";
+import GoogleSignInLink from "../components/GoogleSignInLink";
 import logo from "../assets/logo-full.png";
+import { API_BASE } from "../config";
 
 const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isPasswordValid = (password) => {
@@ -13,12 +15,19 @@ const isPasswordValid = (password) => {
 };
 
 function LoginPage() {
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [touched, setTouched] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "google") setError("התחברות עם גוגל נכשלה. ודא שאתה ברשימת משתמשי הבדיקה.");
+    else if (err === "facebook") setError("התחברות עם פייסבוק נכשלה.");
+  }, [searchParams]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,7 +60,7 @@ function LoginPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -150,6 +159,14 @@ function LoginPage() {
                       {loading ? "מתחבר..." : "התחברות"}
                     </button>
                   </form>
+
+                  <div className="auth-divider">
+                    <span>או</span>
+                  </div>
+
+                  <GoogleSignInLink href={`${API_BASE}/api/auth/google`}>
+                    התחבר עם גוגל
+                  </GoogleSignInLink>
 
                   <div className="auth-footer">
                     <span>אין לך חשבון?</span>

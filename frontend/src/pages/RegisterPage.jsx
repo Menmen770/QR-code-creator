@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import GoogleSignInLink from "../components/GoogleSignInLink";
 import RobotSpline from "../components/RobotSpline";
 import logo from "../assets/logo-full.png";
+import { API_BASE } from "../config";
 
 const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isPhoneValid = (phone) => /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
@@ -60,7 +62,7 @@ function RegisterPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -148,7 +150,8 @@ function RegisterPage() {
                         value={form.phone}
                         onChange={handleChange}
                         onBlur={() => handleBlur("phone")}
-                        className={`form-control ${
+                        dir="rtl"
+                        className={`form-control auth-phone-input-rtl ${
                           touched.phone && !isPhoneValid(form.phone)
                             ? "is-invalid"
                             : ""
@@ -203,6 +206,14 @@ function RegisterPage() {
                       {loading ? "יוצר חשבון..." : "הרשמה"}
                     </button>
                   </form>
+
+                  <div className="auth-divider">
+                    <span>או</span>
+                  </div>
+
+                  <GoogleSignInLink href={`${API_BASE}/api/auth/google`}>
+                    הרשם עם גוגל
+                  </GoogleSignInLink>
 
                   <div className="auth-footer">
                     <span>כבר יש לך חשבון?</span>
