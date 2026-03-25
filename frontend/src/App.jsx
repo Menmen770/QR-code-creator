@@ -8,6 +8,7 @@ import ContactPage from "./pages/ContactPage";
 import PrivacyTermsPage from "./pages/PrivacyTermsPage";
 import MainNavbar from "./components/MainNavbar";
 import SiteFooter from "./components/SiteFooter";
+import { API_BASE } from "./config";
 import AccessibilityButton from "./components/AccessibilityButton";
 import BackToTopButton from "./components/BackToTopButton";
 
@@ -19,7 +20,7 @@ function ProtectedLayout() {
 
     const checkAuth = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/me", {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
           credentials: "include",
         });
 

@@ -9,6 +9,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import logo from "../assets/logo-full.png";
+import { API_BASE } from "../config";
 
 const RECENT_QR_KEY = "qrMasterRecentHistory";
 
@@ -58,7 +59,7 @@ function MainNavbar() {
 
     const checkAuth = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/me", {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
           credentials: "include",
         });
 
@@ -135,7 +136,7 @@ function MainNavbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/api/auth/logout", {
+      await fetch(`${API_BASE}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
       });
@@ -155,7 +156,7 @@ function MainNavbar() {
     setIsSavingProfile(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/profile", {
+      const response = await fetch(`${API_BASE}/api/auth/profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

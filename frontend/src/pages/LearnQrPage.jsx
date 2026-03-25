@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import QrTutorialTimeline from "../components/QrTutorialTimeline";
 
 function LearnQrPage() {
   return (
@@ -10,6 +11,8 @@ function LearnQrPage() {
           מידע במהירות גבוהה. במקום להקליד כתובת ידנית, המשתמש סורק את הקוד
           במצלמה ומקבל גישה מיידית לתוכן.
         </p>
+
+        <QrTutorialTimeline />
 
         <section className="learn-section">
           <h2>רקע קצר</h2>
