@@ -5,6 +5,7 @@ const { createSessionMiddleware } = require("./middleware/session");
 const { registerPassportStrategies } = require("./config/passport");
 const qrRoutes = require("./routes/qr");
 const authRoutes = require("./routes/auth");
+const savedQrRoutes = require("./routes/savedQr");
 
 function createApp() {
   const app = express();
@@ -15,7 +16,7 @@ function createApp() {
       credentials: true,
     }),
   );
-  app.use(express.json());
+  app.use(express.json({ limit: "1mb" }));
   app.use(createSessionMiddleware());
   app.use(passport.initialize());
 
@@ -27,6 +28,7 @@ function createApp() {
 
   app.use("/api", qrRoutes);
   app.use("/api", authRoutes);
+  app.use("/api", savedQrRoutes);
 
   return app;
 }

@@ -1,0 +1,38 @@
+const mongoose = require("mongoose");
+
+const styleSchema = new mongoose.Schema(
+  {
+    fgColor: { type: String, default: "#000000" },
+    bgColor: { type: String, default: "#ffffff" },
+    bgColorMode: { type: String, default: "solid" },
+    bgEffect: { type: String, default: "none" },
+    dotsType: { type: String, default: "square" },
+    cornersType: { type: String, default: "square" },
+    logoUrl: { type: String, default: "" },
+    logoShape: { type: String, default: "square" },
+    stickerType: { type: String, default: "none" },
+    pdfInputMode: { type: String, default: "file" },
+    logoInputMode: { type: String, default: "file" },
+  },
+  { _id: false },
+);
+
+const savedQrSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    qrType: { type: String, required: true },
+    qrValue: { type: String, default: "" },
+    qrInputs: { type: mongoose.Schema.Types.Mixed, default: {} },
+    style: { type: styleSchema, default: () => ({}) },
+  },
+  { timestamps: true },
+);
+
+savedQrSchema.index({ userId: 1, createdAt: -1 });
+
+module.exports = mongoose.model("SavedQr", savedQrSchema);
