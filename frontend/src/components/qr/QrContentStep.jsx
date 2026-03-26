@@ -55,7 +55,7 @@ function QrContentStep({
           {pdfInputMode === "file" ? (
             <>
               <div
-                className={`pdf-drop-zone document-drop-zone ${isDragging ? "dragging" : ""} ${pdfFile ? "has-file" : ""}`}
+                className={`pdf-drop-zone document-drop-zone qr-file-drop-zone-wide ${isDragging ? "dragging" : ""} ${pdfFile ? "has-file" : ""}`}
                 onDrop={handlePdfDrop}
                 onDragOver={handlePdfDragOver}
                 onDragLeave={handlePdfDragLeave}

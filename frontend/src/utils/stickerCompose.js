@@ -6,6 +6,7 @@ import { paintExportBackground } from "./qrExportBackground";
 /** QR drawn smaller inside the hole so the frame graphic reads larger (same overlay size). */
 export const STICKER_QR_INNER_SCALE = 0.78;
 
+// פונקציה שמכניסה תמונה לתוך מלבן ושומרת על הפרופורציות שלה
 /** Draw image scaled with "cover" into dx,dy,dw,dh */
 export function drawImageCover(ctx, img, dx, dy, dw, dh) {
   const iw = img.naturalWidth || img.width;
@@ -39,6 +40,7 @@ export function drawImageCover(ctx, img, dx, dy, dw, dh) {
  * @param {{ x: number, y: number, width: number, height: number }} normRect - STICKER_QR_NORMALIZED_RECT
  * @param {null|{ bgColorMode: string, bgColor: string, bgEffect: string, getEffectBackground: (id: string) => string }} exportBgState — if set (download), paints chosen background; if null (preview), transparent outside frame
  */
+
 export function drawStickerImageComposite(
   ctx,
   qrImg,

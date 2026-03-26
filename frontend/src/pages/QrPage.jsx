@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQrGenerator } from "../hooks";
 import {
   BG_EFFECTS,
@@ -20,6 +21,8 @@ import {
 } from "../components/qr";
 
 function QrPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const qr = useQrGenerator();
 
   const {
@@ -68,7 +71,18 @@ function QrPage() {
     handleLogoDragLeave,
     handleLogoFileSelect,
     downloadQR,
+    saveQr,
+    saveQrSaving,
+    saveQrMessage,
+    applySavedQrPayload,
   } = qr;
+
+  useEffect(() => {
+    const payload = location.state?.loadSavedQr;
+    if (!payload) return;
+    applySavedQrPayload(payload);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state, applySavedQrPayload, navigate, location.pathname]);
 
   const [activeTab, setActiveTab] = useState("color");
   const [showMoreOptions, setShowMoreOptions] = useState(false);
@@ -157,7 +171,6 @@ function QrPage() {
               handleLogoFileSelect={handleLogoFileSelect}
               loading={loading}
               error={error}
-              qrImage={qrImage}
             />
           </div>
 
@@ -173,7 +186,11 @@ function QrPage() {
             bgEffect={bgEffect}
             bgColor={bgColor}
             stickerType={stickerType}
+            getEffectBackground={getEffectBackground}
             downloadQR={downloadQR}
+            saveQr={saveQr}
+            saveQrSaving={saveQrSaving}
+            saveQrMessage={saveQrMessage}
           />
         </div>
 

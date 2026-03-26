@@ -28,57 +28,63 @@ export const BG_EFFECTS = [
   {
     id: "sunset-silk",
     name: "שקיעה רכה",
-    gradient: "linear-gradient(135deg, #f97316 0%, #ec4899 100%)",
+    gradient: "linear-gradient(135deg, #ff512f 0%, #dd2476 100%)",
   },
   {
     id: "warm-terracotta",
     name: "טרה-קוטה",
-    gradient: "linear-gradient(135deg, #d6a57f 0%, #a16207 100%)",
+    gradient: "linear-gradient(135deg, #e5976e 0%, #7f4122 100%)",
   },
   {
     id: "classic-peach",
     name: "אפרסק קלאסי",
-    gradient: "linear-gradient(135deg, #fdba74 0%, #f9a8d4 100%)",
+    gradient: "linear-gradient(135deg, #ff9a8b 0%, #ff6a88 100%)",
   },
   {
     id: "golden-hour",
     name: "שעת זהב",
-    gradient: "linear-gradient(135deg, #fbbf24 0%, #fb923c 100%)",
+    gradient: "linear-gradient(135deg, #f2994a 0%, #f2c94c 100%)",
   },
   {
     id: "soft-rose",
     name: "ורוד עדין",
-    gradient: "linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 100%)",
+    gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
   },
   {
     id: "desert-sand",
-    name: "חול מדברי",
-    gradient: "linear-gradient(135deg, #fde68a 0%, #fdba74 100%)",
+    name: "דיונה רכה",
+    gradient: "linear-gradient(135deg, #fff9f3 0%, #e8d4c0 45%, #c4a574 100%)",
   },
   {
     id: "ocean-breeze",
     name: "בריזת ים",
-    gradient: "linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%)",
+    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
   },
   {
     id: "purple-dream",
     name: "חלום סגול",
-    gradient: "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)",
+    gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
   },
   {
     id: "mint-fresh",
     name: "מנטה",
-    gradient: "linear-gradient(135deg, #99f6e4 0%, #5eead4 100%)",
+    gradient: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
   },
   {
     id: "coral-reef",
     name: "אלמוג",
-    gradient: "linear-gradient(135deg, #fdba74 0%, #fb7185 100%)",
+    gradient: "linear-gradient(135deg, #ff9a56 0%, #ff6a95 100%)",
   },
   {
     id: "lavender-mist",
     name: "לבנדר",
-    gradient: "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
+    gradient: "linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)",
+  },
+  {
+    id: "instagram-glow",
+    name: "סגנון אינסטגרם",
+    gradient:
+      "linear-gradient(135deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%)",
   },
 ];
 
@@ -90,13 +96,13 @@ export function getEffectBackground(effectId) {
 export const PRESET_QR_COLORS = [
   { name: "שחור", hex: "#111111" },
   { name: "גרפיט", hex: "#1f2937" },
-  { name: "אפור כהה", hex: "#374151" },
-  { name: "נייבי", hex: "#1e3a8a" },
+  { name: "אפור עשן", hex: "#4b5563" },
+  { name: "פייסבוק / טלגרם", hex: "#1877f2" },
   { name: "כחול עמוק", hex: "#1d4ed8" },
   { name: "טורקיז", hex: "#0a9396" },
+  { name: "וואטסאפ", hex: "#25d366" },
   { name: "ירוק כהה", hex: "#166534" },
   { name: "זית כהה", hex: "#3f6212" },
-  { name: "חום", hex: "#78350f" },
   { name: "בורדו", hex: "#7f1d1d" },
   { name: "סגול כהה", hex: "#5b21b6" },
 ];

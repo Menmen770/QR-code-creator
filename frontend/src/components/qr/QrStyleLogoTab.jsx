@@ -1,4 +1,8 @@
-import { FiFileText, FiLink, FiX } from "react-icons/fi";
+import { FiFileText, FiGrid, FiLink, FiX } from "react-icons/fi";
+import {
+  PRESET_BRAND_LOGOS,
+  isPresetLogoDataUrl,
+} from "../../utils/presetBrandLogos";
 
 function QrStyleLogoTab({
   logoInputMode,
@@ -15,48 +19,150 @@ function QrStyleLogoTab({
   handleLogoDragLeave,
   handleLogoFileSelect,
 }) {
+  const selectPreset = (preset) => {
+    setLogoInputMode("preset");
+    setLogoFile(null);
+    if (logoUrl === preset.dataUrl) {
+      setLogoUrl("");
+    } else {
+      setLogoUrl(preset.dataUrl);
+    }
+  };
+
+  const sourceTabClass = (mode) =>
+    `nav-link ${logoInputMode === mode ? "active" : ""}`;
+  const shapeTabClass = (shape) =>
+    `nav-link ${logoShape === shape ? "active" : ""}`;
+
   return (
-    <div className="vstack gap-4">
-      <div className="d-flex gap-2 mb-3">
-        <button
-          type="button"
-          className={`btn ${logoInputMode === "file" ? "btn-primary" : "btn-outline-secondary"}`}
-          onClick={() => setLogoInputMode("file")}
-        >
-          <FiFileText className="me-2" />
-          העלאת תמונה
-        </button>
-        <button
-          type="button"
-          className={`btn ${logoInputMode === "url" ? "btn-primary" : "btn-outline-secondary"}`}
-          onClick={() => setLogoInputMode("url")}
-        >
-          <FiLink className="me-2" />
-          הדבקת URL
-        </button>
-      </div>
+    <div className="qr-logo-tab-stack">
+      <ul
+        className="nav nav-pills qr-tabs qr-logo-tab-row qr-logo-inline-tabs mb-0"
+        role="tablist"
+        aria-label="מקור לוגו"
+      >
+          <li className="nav-item" role="presentation">
+            <button
+              type="button"
+              className={sourceTabClass("preset")}
+              role="tab"
+              aria-selected={logoInputMode === "preset"}
+              onClick={() => setLogoInputMode("preset")}
+            >
+              <FiGrid className="qr-logo-tab-icon" aria-hidden />
+              לוגואים מוכנים
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              type="button"
+              className={sourceTabClass("file")}
+              role="tab"
+              aria-selected={logoInputMode === "file"}
+              onClick={() => {
+                if (logoInputMode === "preset" && isPresetLogoDataUrl(logoUrl)) {
+                  setLogoUrl("");
+                  setLogoFile(null);
+                }
+                setLogoInputMode("file");
+              }}
+            >
+              <FiFileText className="qr-logo-tab-icon" aria-hidden />
+              העלאת תמונה
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              type="button"
+              className={sourceTabClass("url")}
+              role="tab"
+              aria-selected={logoInputMode === "url"}
+              onClick={() => {
+                if (logoInputMode === "preset" && isPresetLogoDataUrl(logoUrl)) {
+                  setLogoUrl("");
+                  setLogoFile(null);
+                }
+                setLogoInputMode("url");
+              }}
+            >
+              <FiLink className="qr-logo-tab-icon" aria-hidden />
+              הדבקת URL
+            </button>
+          </li>
+        </ul>
 
-      <div className="d-flex gap-2 mb-3">
-        <button
-          type="button"
-          className={`btn ${logoShape === "square" ? "btn-primary" : "btn-outline-secondary"}`}
-          onClick={() => setLogoShape("square")}
-        >
-          חיתוך מרובע
-        </button>
-        <button
-          type="button"
-          className={`btn ${logoShape === "circle" ? "btn-primary" : "btn-outline-secondary"}`}
-          onClick={() => setLogoShape("circle")}
-        >
-          חיתוך עגול
-        </button>
-      </div>
+      <ul
+        className="nav nav-pills qr-tabs qr-logo-tab-row qr-logo-inline-tabs mb-0"
+        role="tablist"
+        aria-label="צורת חיתוך לוגו"
+      >
+            <li className="nav-item" role="presentation">
+              <button
+                type="button"
+                className={shapeTabClass("square")}
+                role="tab"
+                aria-selected={logoShape === "square"}
+                onClick={() => setLogoShape("square")}
+              >
+                חור מרובע
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                type="button"
+                className={shapeTabClass("circle")}
+                role="tab"
+                aria-selected={logoShape === "circle"}
+                onClick={() => setLogoShape("circle")}
+              >
+                חור עגול
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                type="button"
+                className={shapeTabClass("overlay")}
+                role="tab"
+                aria-selected={logoShape === "overlay"}
+                onClick={() => setLogoShape("overlay")}
+              >
+                ללא חור
+              </button>
+            </li>
+          </ul>
 
-      {logoInputMode === "file" ? (
+      {logoInputMode === "preset" ? (
         <>
           <div
-            className={`pdf-drop-zone document-drop-zone ${isLogoDragging ? "dragging" : ""} ${logoFile ? "has-file" : ""}`}
+            className="qr-preset-logo-grid"
+            role="group"
+            aria-label="לוגואים מוכנים"
+          >
+            {PRESET_BRAND_LOGOS.map((preset) => {
+              const selected = logoUrl === preset.dataUrl;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={`qr-preset-logo-btn ${selected ? "qr-preset-logo-btn--selected" : ""}`}
+                  onClick={() => selectPreset(preset)}
+                  title={preset.name}
+                  aria-label={`לוגו ${preset.name}`}
+                  aria-pressed={selected}
+                >
+                  <span className="qr-preset-logo-btn__thumb">
+                    <img src={preset.dataUrl} alt="" />
+                  </span>
+                  <span className="qr-preset-logo-btn__label">{preset.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      ) : logoInputMode === "file" ? (
+        <>
+          <div
+            className={`pdf-drop-zone document-drop-zone qr-file-drop-zone-wide ${isLogoDragging ? "dragging" : ""} ${logoFile ? "has-file" : ""}`}
             onDrop={handleLogoDrop}
             onDragOver={handleLogoDragOver}
             onDragLeave={handleLogoDragLeave}
@@ -108,22 +214,18 @@ function QrStyleLogoTab({
           </div>
         </>
       ) : (
-        <>
-          <label className="form-label fw-semibold">קישור לוגו</label>
-          <input
-            type="url"
-            className="form-control"
-            placeholder="https://example.com/logo.png"
-            value={logoUrl}
-            onChange={(e) => {
-              setLogoUrl(e.target.value);
-              setLogoFile(null);
-            }}
-          />
-          <small className="text-muted">
-            הדבק כאן URL של תמונה (PNG/JPG/SVG)
-          </small>
-        </>
+        <input
+          type="url"
+          className="form-control qr-logo-url-input"
+          placeholder="https://example.com/logo.png"
+          dir="ltr"
+          aria-label="כתובת תמונת לוגו"
+          value={logoUrl}
+          onChange={(e) => {
+            setLogoUrl(e.target.value);
+            setLogoFile(null);
+          }}
+        />
       )}
     </div>
   );

@@ -43,7 +43,6 @@ function QrStylePanel({
   handleLogoFileSelect,
   loading,
   error,
-  qrImage,
 }) {
   const tabClass = (tabName) =>
     `nav-link ${activeTab === tabName ? "active" : ""}`;
@@ -169,9 +168,6 @@ function QrStylePanel({
         )}
         {error && (
           <div className="alert alert-danger mt-3">{error}</div>
-        )}
-        {qrImage && !loading && (
-          <div className="alert alert-success mt-3">ה-QR מוכן להורדה.</div>
         )}
       </div>
     </div>

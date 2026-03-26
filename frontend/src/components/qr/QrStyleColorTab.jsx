@@ -147,55 +147,54 @@ function QrStyleColorTab({
               </>
             ) : (
               <>
-                {bgEffects.map((effect) => (
-                  <button
-                    key={effect.id}
-                    type="button"
-                    aria-label={`אפקט רקע: ${effect.name}`}
-                    onClick={() => setBgEffect(effect.id)}
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      border:
-                        bgEffect === effect.id
-                          ? "3px solid #0a9396"
-                          : "2px solid #e8e8e8",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      background: getEffectBackground(effect.id),
-                      boxShadow:
-                        bgEffect === effect.id
-                          ? "0 4px 12px rgba(10, 147, 150, 0.4)"
-                          : "none",
-                      padding: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "11px",
-                      fontWeight: "600",
-                      color:
-                        effect.id === "none"
-                          ? bgEffect === effect.id
-                            ? "#0a9396"
-                            : "#6b7280"
-                          : "#ffffff",
-                      textShadow:
-                        effect.id === "none"
-                          ? "none"
-                          : "0 1px 2px rgba(0,0,0,0.5)",
-                    }}
-                    title={effect.name}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = "scale(1.1)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = "scale(1)";
-                    }}
-                  >
-                    {effect.id === "none" ? "⚪" : ""}
-                  </button>
-                ))}
+                {bgEffects
+                  .filter((effect) => effect.id !== "none")
+                  .map((effect) => (
+                    <button
+                      key={effect.id}
+                      type="button"
+                      aria-label={`אפקט רקע: ${effect.name}`}
+                      aria-pressed={bgEffect === effect.id}
+                      onClick={() => {
+                        if (bgEffect === effect.id) {
+                          setBgEffect("none");
+                        } else {
+                          setBgEffect(effect.id);
+                        }
+                      }}
+                      style={{
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "50%",
+                        border:
+                          bgEffect === effect.id
+                            ? "3px solid #0a9396"
+                            : "2px solid #e8e8e8",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        background: getEffectBackground(effect.id),
+                        boxShadow:
+                          bgEffect === effect.id
+                            ? "0 4px 12px rgba(10, 147, 150, 0.4)"
+                            : "none",
+                        padding: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        color: "#ffffff",
+                        textShadow: "0 1px 2px rgba(0,0,0,0.5)",
+                      }}
+                      title={effect.name}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = "scale(1.1)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = "scale(1)";
+                      }}
+                    />
+                  ))}
               </>
             )}
           </div>

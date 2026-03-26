@@ -1,4 +1,5 @@
-import { FiFileText } from "react-icons/fi";
+import { useState, useEffect, useRef } from "react";
+import { FiFileText, FiSave, FiChevronDown } from "react-icons/fi";
 
 /**
  * שלב 3: תצוגה מקדימה והורדות.
@@ -15,15 +16,46 @@ function QrPreviewPanel({
   bgEffect,
   bgColor,
   stickerType,
+  getEffectBackground,
   downloadQR,
+  saveQr,
+  saveQrSaving,
+  saveQrMessage,
 }) {
   const showPdfFileHint =
-    qrType === "pdf" &&
-    pdfInputMode === "file" &&
-    pdfFile &&
-    !qrInputs.pdf;
+    qrType === "pdf" && pdfInputMode === "file" && pdfFile && !qrInputs.pdf;
 
   const hideQrImageArea = showPdfFileHint;
+
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
+  const [downloadFormat, setDownloadFormat] = useState("png");
+  const downloadSplitRef = useRef(null);
+
+  const downloadFormatLabels = {
+    png: "PNG",
+    svg: "SVG",
+    jpg: "JPG",
+    pdf: "PDF",
+  };
+
+  useEffect(() => {
+    if (!downloadMenuOpen) return;
+    const close = (e) => {
+      if (
+        downloadSplitRef.current &&
+        !downloadSplitRef.current.contains(e.target)
+      ) {
+        setDownloadMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [downloadMenuOpen]);
+
+  const selectDownloadFormat = (format) => {
+    setDownloadFormat(format);
+    setDownloadMenuOpen(false);
+  };
 
   return (
     <div className="col-lg-5">
@@ -36,15 +68,11 @@ function QrPreviewPanel({
 
           <div
             className={`qr-preview mb-4 flex-grow-1 ${
-              bgColorMode === "none"
-                ? "transparent-bg"
-                : bgColorMode === "effect" && bgEffect !== "none"
-                  ? `effect-${bgEffect}`
-                  : ""
+              bgColorMode === "none" ? "transparent-bg" : ""
             } ${stickerType !== "none" ? "qr-preview--with-sticker" : ""}`}
             style={
               bgColorMode === "effect" && bgEffect !== "none"
-                ? {}
+                ? { background: getEffectBackground(bgEffect) }
                 : bgColorMode === "none"
                   ? {}
                   : { background: bgColor }
@@ -52,10 +80,7 @@ function QrPreviewPanel({
           >
             {loading && (
               <div className="text-center">
-                <div
-                  className="spinner-border text-teal mb-3"
-                  role="status"
-                />
+                <div className="spinner-border text-teal mb-3" role="status" />
                 <div className="text-muted">יוצר QR...</div>
               </div>
             )}
@@ -87,28 +112,106 @@ function QrPreviewPanel({
             )}
           </div>
 
-          <div className="row g-2">
-            <div className="col-md-6">
-              <button
-                type="button"
-                className="btn btn-teal w-100"
-                onClick={() => downloadQR("png")}
-                disabled={!qrImage || loading}
+          <div className="row g-2 align-items-stretch">
+            <div className="col-12 col-md-8">
+              <div
+                className="qr-download-split-wrap position-relative"
+                ref={downloadSplitRef}
               >
-                הורד PNG
-              </button>
+                <div className="qr-download-split">
+                  <button
+                    type="button"
+                    className="qr-download-split-main btn btn-teal"
+                    onClick={() => downloadQR(downloadFormat)}
+                    disabled={!qrImage || loading}
+                    aria-label={`הורד כקובץ ${downloadFormatLabels[downloadFormat]}`}
+                  >
+                    הורד {downloadFormatLabels[downloadFormat]}
+                  </button>
+                  <button
+                    type="button"
+                    className="qr-download-split-toggle btn btn-teal"
+                    onClick={() => setDownloadMenuOpen((o) => !o)}
+                    disabled={!qrImage || loading}
+                    aria-expanded={downloadMenuOpen}
+                    aria-haspopup="menu"
+                    aria-label="עוד פורמטים להורדה"
+                  >
+                    <FiChevronDown
+                      size={20}
+                      style={{
+                        transform: downloadMenuOpen ? "rotate(180deg)" : "none",
+                        transition: "transform 0.2s ease",
+                      }}
+                      aria-hidden
+                    />
+                  </button>
+                </div>
+                {downloadMenuOpen && (
+                  <div
+                    className="qr-download-split-menu"
+                    role="menu"
+                    aria-label="בחירת פורמט להורדה"
+                  >
+                    <button
+                      type="button"
+                      className="qr-download-split-option"
+                      role="menuitem"
+                      onClick={() => selectDownloadFormat("png")}
+                    >
+                      PNG
+                    </button>
+                    <button
+                      type="button"
+                      className="qr-download-split-option"
+                      role="menuitem"
+                      onClick={() => selectDownloadFormat("svg")}
+                    >
+                      SVG
+                    </button>
+                    <button
+                      type="button"
+                      className="qr-download-split-option"
+                      role="menuitem"
+                      onClick={() => selectDownloadFormat("jpg")}
+                    >
+                      JPG
+                    </button>
+                    <button
+                      type="button"
+                      className="qr-download-split-option"
+                      role="menuitem"
+                      onClick={() => selectDownloadFormat("pdf")}
+                    >
+                      PDF
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="col-md-6">
+            <div className="col-12 col-md-4">
               <button
                 type="button"
-                className="btn btn-outline-teal w-100"
-                onClick={() => downloadQR("svg")}
-                disabled={!qrImage || loading}
+                className="btn btn-outline-teal w-100 h-100 d-inline-flex align-items-center justify-content-center gap-2 px-2 text-wrap"
+                onClick={() => void saveQr()}
+                disabled={!qrImage || loading || saveQrSaving}
+                title="שמירה לאוסף"
               >
-                הורד SVG
+                <FiSave size={18} aria-hidden />
+                {saveQrSaving ? "שומר..." : "שמירה לאוסף"}
               </button>
             </div>
           </div>
+          {saveQrMessage && (
+            <p
+              className={`small mt-3 mb-0 text-center ${
+                saveQrMessage.includes("נכשל") ? "text-danger" : "text-success"
+              }`}
+              role="status"
+            >
+              {saveQrMessage}
+            </p>
+          )}
         </div>
       </div>
     </div>
