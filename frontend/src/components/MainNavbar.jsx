@@ -109,25 +109,80 @@ function MainNavbar() {
   }, []);
 
   useEffect(() => {
-    const loadRecentQrs = () => {
-      const parsed = loadRecentQrItems();
-      setRecentQrs(Array.isArray(parsed) ? parsed.slice(0, 5) : []);
+    const loadRecentQrs = async () => {
+      if (!isAuthenticated) {
+        const parsed = loadRecentQrItems();
+        const list = Array.isArray(parsed) ? parsed.slice(0, 5) : [];
+        setRecentQrs(
+          list.map((r) => ({
+            id: r.id,
+            value: r.value,
+            createdAt: r.createdAt,
+            fullPayload:
+              r.fullPayload ||
+              (r.type === "url"
+                ? {
+                    qrType: "url",
+                    qrValue: r.value || "",
+                    qrInputs: { url: r.value || "" },
+                    style: {},
+                  }
+                : {
+                    qrType: r.type || "url",
+                    qrValue: r.value || "",
+                    qrInputs: {},
+                    style: {},
+                  }),
+          })),
+        );
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/saved-qrs?limit=5`, {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("failed");
+        const data = await res.json();
+        const rows = Array.isArray(data.items) ? data.items : [];
+        setRecentQrs(
+          rows.map((row) => ({
+            id: row._id,
+            value: row.qrValue,
+            createdAt: row.createdAt,
+            fullPayload: {
+              qrType: row.qrType,
+              qrValue: row.qrValue,
+              qrInputs: row.qrInputs || {},
+              style: row.style || {},
+            },
+          })),
+        );
+      } catch {
+        setRecentQrs([]);
+      }
     };
 
     if (isMenuOpen) {
       loadRecentQrs();
     }
 
-    const handleRecentUpdate = () => loadRecentQrs();
+    const handleServerUpdate = () => {
+      if (isAuthenticated && isMenuOpen) loadRecentQrs();
+    };
+    const handleLocalUpdate = () => {
+      if (!isAuthenticated) loadRecentQrs();
+    };
 
-    window.addEventListener("qr-recent-updated", handleRecentUpdate);
-    window.addEventListener("storage", handleRecentUpdate);
+    window.addEventListener("qr-saved-updated", handleServerUpdate);
+    window.addEventListener("qr-recent-updated", handleLocalUpdate);
+    window.addEventListener("storage", handleLocalUpdate);
 
     return () => {
-      window.removeEventListener("qr-recent-updated", handleRecentUpdate);
-      window.removeEventListener("storage", handleRecentUpdate);
+      window.removeEventListener("qr-saved-updated", handleServerUpdate);
+      window.removeEventListener("qr-recent-updated", handleLocalUpdate);
+      window.removeEventListener("storage", handleLocalUpdate);
     };
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isAuthenticated]);
 
   const handleLogout = async () => {
     try {
@@ -189,6 +244,13 @@ function MainNavbar() {
   const togglePanel = (panelName) => {
     setProfileMessage("");
     setExpandedPanel((prev) => (prev === panelName ? null : panelName));
+  };
+
+  const handleSavedQrClick = (item) => {
+    if (!item?.fullPayload) return;
+    navigate("/", { state: { loadSavedQr: item.fullPayload } });
+    setIsMenuOpen(false);
+    setExpandedPanel(null);
   };
 
   return (
@@ -295,7 +357,7 @@ function MainNavbar() {
                   >
                     <span>
                       <FiClock className="me-2" />
-                      QR שמורים
+                      האוסף שלי
                     </span>
                     {expandedPanel === "recent" ? (
                       <FiChevronUp />
@@ -310,19 +372,25 @@ function MainNavbar() {
                         <ul className="navbar-recent-list">
                           {recentQrs.map((item) => (
                             <li key={item.id}>
-                              <span className="recent-type">{item.type}</span>
-                              <span className="recent-value" title={item.value}>
-                                {item.value}
-                              </span>
-                              <span className="recent-time">
-                                {formatTime(item.createdAt)}
-                              </span>
+                              <button
+                                type="button"
+                                className="navbar-recent-item"
+                                onClick={() => handleSavedQrClick(item)}
+                                title={item.value}
+                              >
+                                <span className="recent-value">
+                                  {item.value}
+                                </span>
+                                <span className="recent-time">
+                                  {formatTime(item.createdAt)}
+                                </span>
+                              </button>
                             </li>
                           ))}
                         </ul>
                       ) : (
                         <p className="navbar-empty-text mb-0">
-                          עדיין אין QR שמורים
+                          עדיין אין פריטים באוסף
                         </p>
                       )}
                     </div>

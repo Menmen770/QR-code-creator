@@ -16,6 +16,7 @@ function ProtectedLayout() {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
+    // מוודא שהקומפוננטה עדיין חיה לפני שמעדכנים את התוצאה מהשרת
     let isMounted = true;
 
     const checkAuth = async () => {
