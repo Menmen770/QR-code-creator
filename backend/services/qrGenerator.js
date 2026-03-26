@@ -4,7 +4,8 @@ const {
 const nodeCanvas = require("canvas");
 const { JSDOM } = require("jsdom");
 
-async function addLogoWithCutout(qrBuffer, imageSource, logoShape = "square") {
+/** חור שקוף במרכז בלי תמונת לוגו — למי שרוצה למלא בעצמו */
+async function applyCutoutOnly(qrBuffer, logoShape = "square") {
   const qrImage = await nodeCanvas.loadImage(qrBuffer);
   const canvas = nodeCanvas.createCanvas(qrImage.width, qrImage.height);
   const ctx = canvas.getContext("2d");
@@ -13,9 +14,8 @@ async function addLogoWithCutout(qrBuffer, imageSource, logoShape = "square") {
   const centerX = qrImage.width / 2;
   const centerY = qrImage.height / 2;
   const cutoutSize = Math.min(qrImage.width, qrImage.height) * 0.38;
-  const logoSize = cutoutSize * 0.68;
 
-  ctx.fillStyle = "#ffffff";
+  ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   if (logoShape === "circle") {
     ctx.arc(centerX, centerY, cutoutSize / 2, 0, Math.PI * 2);
@@ -30,11 +30,58 @@ async function addLogoWithCutout(qrBuffer, imageSource, logoShape = "square") {
   ctx.closePath();
   ctx.fill();
 
+  return canvas.toBuffer("image/png");
+}
+
+async function addLogoWithCutout(qrBuffer, imageSource, logoShape = "square") {
+  const qrImage = await nodeCanvas.loadImage(qrBuffer);
+  const canvas = nodeCanvas.createCanvas(qrImage.width, qrImage.height);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(qrImage, 0, 0);
+
+  const centerX = qrImage.width / 2;
+  const centerY = qrImage.height / 2;
+  const cutoutSize = Math.min(qrImage.width, qrImage.height) * 0.38;
+  const logoSize = cutoutSize * 0.68;
+
   try {
     const logoImage = await nodeCanvas.loadImage(imageSource);
     const sourceSize = Math.min(logoImage.width, logoImage.height);
     const sourceX = (logoImage.width - sourceSize) / 2;
     const sourceY = (logoImage.height - sourceSize) / 2;
+
+    if (logoShape === "overlay") {
+      const overlaySize = Math.min(qrImage.width, qrImage.height) * 0.22;
+      ctx.drawImage(
+        logoImage,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        centerX - overlaySize / 2,
+        centerY - overlaySize / 2,
+        overlaySize,
+        overlaySize,
+      );
+      return canvas.toBuffer("image/png");
+    }
+
+    /* חור שקוף — הרקע שמאחורי ה-QR (בתצוגה) ייראה דרך השקיפות */
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.beginPath();
+    if (logoShape === "circle") {
+      ctx.arc(centerX, centerY, cutoutSize / 2, 0, Math.PI * 2);
+    } else {
+      ctx.rect(
+        centerX - cutoutSize / 2,
+        centerY - cutoutSize / 2,
+        cutoutSize,
+        cutoutSize,
+      );
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
 
     ctx.drawImage(
       logoImage,
@@ -49,7 +96,7 @@ async function addLogoWithCutout(qrBuffer, imageSource, logoShape = "square") {
     );
   } catch (logoError) {
     console.warn(
-      "Logo image load failed, keeping cutout only:",
+      "Logo image load failed, keeping QR without logo:",
       logoError.message,
     );
   }
@@ -126,6 +173,8 @@ async function generateQrDataUrl(body) {
 
   if (image) {
     finalBuffer = await addLogoWithCutout(qrBuffer, image, logoShape);
+  } else if (logoShape === "square" || logoShape === "circle") {
+    finalBuffer = await applyCutoutOnly(qrBuffer, logoShape);
   }
 
   const base64 = finalBuffer.toString("base64");
@@ -134,5 +183,6 @@ async function generateQrDataUrl(body) {
 
 module.exports = {
   addLogoWithCutout,
+  applyCutoutOnly,
   generateQrDataUrl,
 };
