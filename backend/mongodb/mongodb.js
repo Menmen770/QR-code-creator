@@ -4,7 +4,7 @@ const connectMongoDB = async () => {
   const { MONGO_URI } = process.env;
 
   if (!MONGO_URI) {
-    console.log("⚠️  MongoDB URI not configured (development mode)");
+    console.log("MongoDB URI not configured (development mode)");
     return;
   }
 
