@@ -7,8 +7,8 @@ import {
 } from "../assets/stickerAssets";
 import { drawStickerImageComposite } from "../utils/stickerCompose";
 import { paintExportBackground } from "../utils/qrExportBackground";
-
-const RECENT_QR_KEY = "qrMasterRecentHistory";
+import { getEffectBackground } from "../utils/qrConstants";
+import { loadRecentQrItems, saveRecentQrItems } from "../utils/recentQrStorage";
 
 export function useQrGenerator() {
   const [qrType, setQrType] = useState("url");
@@ -18,8 +18,6 @@ export function useQrGenerator() {
   const [qrImage, setQrImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [fgColorMode, setFgColorMode] = useState("solid");
-  const [fgEffect, setFgEffect] = useState("none");
   const [bgColorMode, setBgColorMode] = useState("solid");
   const [bgEffect, setBgEffect] = useState("none");
   const [pdfFile, setPdfFile] = useState(null);
@@ -51,24 +49,6 @@ export function useQrGenerator() {
     youtube: "username",
     tiktok: "username",
   });
-
-  const getEffectBackground = (effectId) => {
-    const gradients = {
-      none: "#ffffff",
-      "sunset-silk": "linear-gradient(135deg, #f97316 0%, #ec4899 100%)",
-      "warm-terracotta": "linear-gradient(135deg, #d6a57f 0%, #a16207 100%)",
-      "classic-peach": "linear-gradient(135deg, #fdba74 0%, #f9a8d4 100%)",
-      "golden-hour": "linear-gradient(135deg, #fbbf24 0%, #fb923c 100%)",
-      "soft-rose": "linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 100%)",
-      "desert-sand": "linear-gradient(135deg, #fde68a 0%, #fdba74 100%)",
-      "ocean-breeze": "linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%)",
-      "purple-dream": "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)",
-      "mint-fresh": "linear-gradient(135deg, #99f6e4 0%, #5eead4 100%)",
-      "coral-reef": "linear-gradient(135deg, #fdba74 0%, #fb7185 100%)",
-      "lavender-mist": "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
-    };
-    return gradients[effectId] || "#ffffff";
-  };
 
   const buildQRValue = (type, inputs) => {
     switch (type) {
@@ -273,11 +253,6 @@ export function useQrGenerator() {
   ]);
 
   useEffect(() => {
-    generateQR(qrValue, fgColor, bgColor);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     if (!qrImage || stickerType === "none") {
       setPreviewWithSticker("");
       return;
@@ -329,12 +304,12 @@ export function useQrGenerator() {
         createdAt: new Date().toISOString(),
       };
 
-      const existing = JSON.parse(localStorage.getItem(RECENT_QR_KEY) || "[]");
+      const existing = loadRecentQrItems();
       const deduped = existing.filter(
         (item) => !(item.type === entry.type && item.value === entry.value),
       );
       const next = [entry, ...deduped].slice(0, 8);
-      localStorage.setItem(RECENT_QR_KEY, JSON.stringify(next));
+      saveRecentQrItems(next);
       window.dispatchEvent(new Event("qr-recent-updated"));
     } catch {
       // ignore localStorage issues
@@ -419,10 +394,6 @@ export function useQrGenerator() {
     previewImage: stickerType !== "none" && previewWithSticker ? previewWithSticker : qrImage,
     loading,
     error,
-    fgColorMode,
-    setFgColorMode,
-    fgEffect,
-    setFgEffect,
     bgColorMode,
     setBgColorMode,
     bgEffect,
@@ -458,7 +429,6 @@ export function useQrGenerator() {
     handleLogoDragOver,
     handleLogoDragLeave,
     handleLogoFileSelect,
-    getEffectBackground,
     downloadQR,
   };
 }

@@ -84,6 +84,7 @@ export default function QrCustomColorButton({
         className="qr-custom-color-trigger"
         style={{ "--qr-custom-color": hex }}
         title={title}
+        aria-label={title}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setOpen((o) => !o)}

@@ -1,36 +1,91 @@
 import {
-  IconLink,
-  IconFileText,
-  IconMail,
-  IconPhone,
-  IconWifi,
-  IconUser,
-  IconMessageCircle,
-  IconBrandWhatsapp,
-  IconBrandFacebook,
-  IconBrandInstagram,
-  IconBrandX,
-  IconBrandLinkedin,
-  IconBrandYoutube,
-  IconBrandTiktok,
-} from "@tabler/icons-react";
+  FiLink,
+  FiFileText,
+  FiMail,
+  FiPhone,
+  FiUser,
+  FiMessageCircle,
+} from "react-icons/fi";
+import { IoWifi } from "react-icons/io5";
+import {
+  FaWhatsapp,
+  FaFacebook,
+  FaInstagram,
+  FaLinkedin,
+  FaYoutube,
+  FaTiktok,
+} from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 import { STICKER_IMAGE_FRAMES } from "../assets/stickerAssets";
 
+/**
+ * אפקטי רקע — שם לתצוגה + gradient/CSS ל־UI ול־canvas (מקור אמת יחיד).
+ * הפורמט של gradient תואם ל־paintExportBackground (linear-gradient עם deg).
+ */
 export const BG_EFFECTS = [
-  { id: "none", name: "ללא אפקט" },
-  { id: "sunset-silk", name: "שקיעה רכה" },
-  { id: "warm-terracotta", name: "טרה-קוטה" },
-  { id: "classic-peach", name: "אפרסק קלאסי" },
-  { id: "golden-hour", name: "שעת זהב" },
-  { id: "soft-rose", name: "ורוד עדין" },
-  { id: "desert-sand", name: "חול מדברי" },
-  { id: "ocean-breeze", name: "בריזת ים" },
-  { id: "purple-dream", name: "חלום סגול" },
-  { id: "mint-fresh", name: "מנטה" },
-  { id: "coral-reef", name: "אלמוג" },
-  { id: "lavender-mist", name: "לבנדר" },
+  { id: "none", name: "ללא אפקט", gradient: "#ffffff" },
+  {
+    id: "sunset-silk",
+    name: "שקיעה רכה",
+    gradient: "linear-gradient(135deg, #f97316 0%, #ec4899 100%)",
+  },
+  {
+    id: "warm-terracotta",
+    name: "טרה-קוטה",
+    gradient: "linear-gradient(135deg, #d6a57f 0%, #a16207 100%)",
+  },
+  {
+    id: "classic-peach",
+    name: "אפרסק קלאסי",
+    gradient: "linear-gradient(135deg, #fdba74 0%, #f9a8d4 100%)",
+  },
+  {
+    id: "golden-hour",
+    name: "שעת זהב",
+    gradient: "linear-gradient(135deg, #fbbf24 0%, #fb923c 100%)",
+  },
+  {
+    id: "soft-rose",
+    name: "ורוד עדין",
+    gradient: "linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 100%)",
+  },
+  {
+    id: "desert-sand",
+    name: "חול מדברי",
+    gradient: "linear-gradient(135deg, #fde68a 0%, #fdba74 100%)",
+  },
+  {
+    id: "ocean-breeze",
+    name: "בריזת ים",
+    gradient: "linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%)",
+  },
+  {
+    id: "purple-dream",
+    name: "חלום סגול",
+    gradient: "linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)",
+  },
+  {
+    id: "mint-fresh",
+    name: "מנטה",
+    gradient: "linear-gradient(135deg, #99f6e4 0%, #5eead4 100%)",
+  },
+  {
+    id: "coral-reef",
+    name: "אלמוג",
+    gradient: "linear-gradient(135deg, #fdba74 0%, #fb7185 100%)",
+  },
+  {
+    id: "lavender-mist",
+    name: "לבנדר",
+    gradient: "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
+  },
 ];
+
+export function getEffectBackground(effectId) {
+  const row = BG_EFFECTS.find((e) => e.id === effectId);
+  return row?.gradient ?? "#ffffff";
+}
 
 export const PRESET_QR_COLORS = [
   { name: "שחור", hex: "#111111" },
@@ -85,23 +140,23 @@ export const STICKER_OPTIONS = [
 ];
 
 export const QR_TYPES_MAIN = [
-  { value: "url", label: "אתר", icon: IconLink },
-  { value: "pdf", label: "קובץ PDF", icon: IconFileText },
-  { value: "email", label: "אימייל", icon: IconMail },
-  { value: "contact", label: "איש קשר", icon: IconUser },
-  { value: "whatsapp", label: "וואטסאפ", icon: IconBrandWhatsapp },
-  { value: "phone", label: "טלפון", icon: IconPhone },
-  { value: "sms", label: "הודעת SMS", icon: IconMessageCircle },
+  { value: "url", label: "אתר", icon: FiLink },
+  { value: "pdf", label: "קובץ PDF", icon: FiFileText },
+  { value: "email", label: "אימייל", icon: FiMail },
+  { value: "contact", label: "איש קשר", icon: FiUser },
+  { value: "whatsapp", label: "וואטסאפ", icon: FaWhatsapp },
+  { value: "phone", label: "טלפון", icon: FiPhone },
+  { value: "sms", label: "הודעת SMS", icon: FiMessageCircle },
 ];
 
 export const QR_TYPES_MORE = [
-  { value: "wifi", label: "Wi-Fi", icon: IconWifi },
-  { value: "facebook", label: "פייסבוק", icon: IconBrandFacebook },
-  { value: "instagram", label: "אינסטגרם", icon: IconBrandInstagram },
-  { value: "twitter", label: "X / טוויטר", icon: IconBrandX },
-  { value: "linkedin", label: "לינקדאין", icon: IconBrandLinkedin },
-  { value: "youtube", label: "יוטיוב", icon: IconBrandYoutube },
-  { value: "tiktok", label: "טיקטוק", icon: IconBrandTiktok },
+  { value: "wifi", label: "Wi-Fi", icon: IoWifi },
+  { value: "facebook", label: "פייסבוק", icon: FaFacebook },
+  { value: "instagram", label: "אינסטגרם", icon: FaInstagram },
+  { value: "twitter", label: "X / טוויטר", icon: FaXTwitter },
+  { value: "linkedin", label: "לינקדאין", icon: FaLinkedin },
+  { value: "youtube", label: "יוטיוב", icon: FaYoutube },
+  { value: "tiktok", label: "טיקטוק", icon: FaTiktok },
 ];
 
 export const QR_TYPES = [...QR_TYPES_MAIN, ...QR_TYPES_MORE];

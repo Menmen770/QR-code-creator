@@ -10,8 +10,7 @@ import {
 } from "react-icons/fi";
 import logo from "../assets/logo-full.png";
 import { API_BASE } from "../config";
-
-const RECENT_QR_KEY = "qrMasterRecentHistory";
+import { loadRecentQrItems } from "../utils/recentQrStorage";
 
 const getGreetingByHour = () => {
   const hour = new Date().getHours();
@@ -111,12 +110,8 @@ function MainNavbar() {
 
   useEffect(() => {
     const loadRecentQrs = () => {
-      try {
-        const parsed = JSON.parse(localStorage.getItem(RECENT_QR_KEY) || "[]");
-        setRecentQrs(Array.isArray(parsed) ? parsed.slice(0, 5) : []);
-      } catch {
-        setRecentQrs([]);
-      }
+      const parsed = loadRecentQrItems();
+      setRecentQrs(Array.isArray(parsed) ? parsed.slice(0, 5) : []);
     };
 
     if (isMenuOpen) {
