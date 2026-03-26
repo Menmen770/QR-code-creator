@@ -42,7 +42,6 @@ function QrStylePanel({
   handleLogoDragLeave,
   handleLogoFileSelect,
   loading,
-  error,
 }) {
   const tabClass = (tabName) =>
     `nav-link ${activeTab === tabName ? "active" : ""}`;
@@ -165,9 +164,6 @@ function QrStylePanel({
             <span className="spinner-border spinner-border-sm" />
             מייצר...
           </div>
-        )}
-        {error && (
-          <div className="alert alert-danger mt-3">{error}</div>
         )}
       </div>
     </div>

@@ -11,6 +11,7 @@ function QrPreviewPanel({
   qrInputs,
   previewImage,
   qrImage,
+  error,
   loading,
   bgColorMode,
   bgEffect,
@@ -84,7 +85,15 @@ function QrPreviewPanel({
                 <div className="text-muted">יוצר QR...</div>
               </div>
             )}
-            {!loading && showPdfFileHint && (
+            {!loading && error && (
+              <div
+                className="text-center text-danger px-3"
+                role="alert"
+              >
+                {error}
+              </div>
+            )}
+            {!loading && !error && showPdfFileHint && (
               <div className="text-center" style={{ color: "#0a9396" }}>
                 <FiFileText size={64} className="mb-3" />
                 <h5 className="mb-3">קובץ נבחר בהצלחה!</h5>
@@ -97,14 +106,14 @@ function QrPreviewPanel({
                 </div>
               </div>
             )}
-            {!loading && !hideQrImageArea && qrImage && (
+            {!loading && !error && !hideQrImageArea && qrImage && (
               <img
                 src={previewImage}
                 alt="קוד QR שנוצר"
                 className={`img-fluid qr-image ${stickerType !== "none" ? "qr-image--sticker" : ""}`}
               />
             )}
-            {!loading && !hideQrImageArea && !qrImage && (
+            {!loading && !error && !hideQrImageArea && !qrImage && (
               <div className="text-center text-muted">
                 <div className="display-6">QR</div>
                 התחל להקליד כדי ליצור קוד QR.

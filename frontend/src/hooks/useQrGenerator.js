@@ -274,7 +274,7 @@ export function useQrGenerator() {
       const data = await response.json();
       setQrImage(data.qrImage);
     } catch {
-      setError("Failed to generate QR code");
+      setError("נכשל ביצירת קוד QR");
       setQrImage("");
     } finally {
       setLoading(false);

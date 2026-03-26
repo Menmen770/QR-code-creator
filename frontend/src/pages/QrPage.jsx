@@ -170,7 +170,6 @@ function QrPage() {
               handleLogoDragLeave={handleLogoDragLeave}
               handleLogoFileSelect={handleLogoFileSelect}
               loading={loading}
-              error={error}
             />
           </div>
 
@@ -181,6 +180,7 @@ function QrPage() {
             qrInputs={qrInputs}
             previewImage={previewImage}
             qrImage={qrImage}
+            error={error}
             loading={loading}
             bgColorMode={bgColorMode}
             bgEffect={bgEffect}
