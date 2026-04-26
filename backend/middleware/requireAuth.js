@@ -1,7 +1,11 @@
+const { getUserIdFromRequest } = require("../utils/authToken");
+
 function requireAuth(req, res, next) {
-  if (!req.session.userId) {
+  const userId = getUserIdFromRequest(req);
+  if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
+  req.userId = userId;
   next();
 }
 

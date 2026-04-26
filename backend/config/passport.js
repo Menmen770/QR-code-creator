@@ -24,7 +24,6 @@ const oauthCallback = (provider) => async (accessToken, refreshToken, profile, d
       user = await User.create({
         fullName,
         email,
-        phone: "",
         passwordHash: null,
         oauthProvider: provider,
         oauthId: profile.id,
