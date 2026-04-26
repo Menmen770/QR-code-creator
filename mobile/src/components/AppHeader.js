@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Modal,
   Pressable,
@@ -14,7 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { useAccessibility } from "../context/AccessibilityContext";
-import { getApiBaseUrl } from "../utils/api";
+import { apiFetchWithTimeout, getApiBaseUrl, parseJsonResponse } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RECENT_QR_KEY = "qrMasterRecentHistory";
@@ -55,7 +56,7 @@ export default function AppHeader() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [expandedPanel, setExpandedPanel] = useState(null);
   const [recentQrs, setRecentQrs] = useState([]);
-  const [profileForm, setProfileForm] = useState({ firstName: "", phone: "" });
+  const [profileForm, setProfileForm] = useState({ firstName: "" });
   const [profileMessage, setProfileMessage] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
 
@@ -65,7 +66,6 @@ export default function AppHeader() {
     if (user) {
       setProfileForm({
         firstName: getFirstName(user?.fullName),
-        phone: user?.phone || "",
       });
     }
   }, [user, getFirstName]);
@@ -95,23 +95,24 @@ export default function AppHeader() {
     setProfileMessage("");
     setProfileSaving(true);
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/profile`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          fullName: profileForm.firstName,
-          phone: profileForm.phone,
-        }),
-      });
-      const data = await response.json();
+      const response = await apiFetchWithTimeout(
+        `${getApiBaseUrl()}/api/auth/profile`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: profileForm.firstName,
+          }),
+        },
+        20000,
+      );
+      const data = await parseJsonResponse(response);
       if (!response.ok) {
         throw new Error(data?.error || "שמירה נכשלה");
       }
       setUser(data.user);
       setProfileForm({
         firstName: getFirstName(data.user.fullName),
-        phone: data.user.phone || "",
       });
       setProfileMessage("הפרטים נשמרו בהצלחה");
     } catch (err) {
@@ -134,7 +135,9 @@ export default function AppHeader() {
   if (checkingAuth) {
     return (
       <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <View style={[styles.container, { justifyContent: "center" }]} />
+        <View style={[styles.container, { justifyContent: "center" }]}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -283,17 +286,6 @@ export default function AppHeader() {
                         setProfileForm((p) => ({ ...p, firstName: t }))
                       }
                       placeholder="השם שלך"
-                      textAlign="right"
-                    />
-                    <Text style={styles.panelLabel}>טלפון</Text>
-                    <TextInput
-                      style={styles.panelInput}
-                      value={profileForm.phone}
-                      onChangeText={(t) =>
-                        setProfileForm((p) => ({ ...p, phone: t }))
-                      }
-                      placeholder="טלפון"
-                      keyboardType="phone-pad"
                       textAlign="right"
                     />
                     <Text style={styles.panelLabel}>אימייל</Text>

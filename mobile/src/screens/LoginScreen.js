@@ -12,7 +12,11 @@ import {
   View,
 } from "react-native";
 import { IconBrandGoogle } from "@tabler/icons-react-native";
-import { getApiBaseUrl } from "../utils/api";
+import {
+  apiFetchWithTimeout,
+  getApiBaseUrl,
+  parseJsonResponse,
+} from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useAccessibility } from "../context/AccessibilityContext";
 import AuthFooter from "../components/AuthFooter";
@@ -59,7 +63,7 @@ export default function LoginScreen({ navigation }) {
 
   const handleSubmit = async () => {
     if (form.password === "123!") {
-      refreshUser({ fullName: "משתמש", email: form.email, phone: "" });
+      refreshUser({ fullName: "משתמש", email: form.email });
       navigation.replace("QrGenerator");
       return;
     }
@@ -73,22 +77,31 @@ export default function LoginScreen({ navigation }) {
     setError("");
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+      const response = await apiFetchWithTimeout(
+        `${getApiBaseUrl()}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        },
+        20000,
+      );
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
       if (!response.ok) {
         throw new Error(data.error || "ההתחברות נכשלה");
       }
 
-      refreshUser(data.user);
+      await refreshUser(data.user, data.token);
       navigation.replace("QrGenerator");
     } catch (err) {
-      setError(err.message || "ההתחברות נכשלה");
+      if (err?.name === "AbortError") {
+        setError(
+          "השרת לא הגיב בזמן. ודא שה-backend רץ על פורט 5000 והגדר ב-mobile/.env: EXPO_PUBLIC_API_URL=http://<IP_המחשב>:5000 (חשוב במכשיר פיזי או Expo tunnel).",
+        );
+      } else {
+        setError(err.message || "ההתחברות נכשלה");
+      }
     } finally {
       setLoading(false);
     }

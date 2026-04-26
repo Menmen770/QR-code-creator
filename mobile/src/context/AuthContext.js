@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getApiBaseUrl } from "../utils/api";
+import {
+  apiFetchWithTimeout,
+  clearStoredAuthToken,
+  getApiBaseUrl,
+  parseJsonResponse,
+  setStoredAuthToken,
+} from "../utils/api";
 
 const AuthContext = createContext(null);
 
@@ -15,14 +21,19 @@ export function AuthProvider({ children }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/me`, {
-        credentials: "include",
-      });
+      const response = await apiFetchWithTimeout(
+        `${getApiBaseUrl()}/api/auth/me`,
+        { credentials: "include" },
+        12000,
+      );
       if (response.ok) {
-        const data = await response.json();
+        const data = await parseJsonResponse(response);
         setUser(data?.user || null);
       } else {
         setUser(null);
+        if (response.status === 401) {
+          await clearStoredAuthToken();
+        }
       }
     } catch {
       setUser(null);
@@ -35,19 +46,28 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
-  const refreshUser = (userData) => {
+  /**
+   * @param {object} userData
+   * @param {string} [token] — JWT מהשרת אחרי login/register
+   */
+  const refreshUser = async (userData, token) => {
+    if (token) {
+      await setStoredAuthToken(token);
+    }
     setUser(userData);
   };
 
   const logout = async () => {
     try {
-      await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await apiFetchWithTimeout(
+        `${getApiBaseUrl()}/api/auth/logout`,
+        { method: "POST", credentials: "include" },
+        12000,
+      );
     } catch (e) {
       console.warn("Logout error:", e);
     }
+    await clearStoredAuthToken();
     setUser(null);
   };
 

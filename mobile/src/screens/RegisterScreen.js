@@ -12,7 +12,11 @@ import {
   View,
 } from "react-native";
 import { IconBrandGoogle } from "@tabler/icons-react-native";
-import { getApiBaseUrl } from "../utils/api";
+import {
+  apiFetchWithTimeout,
+  getApiBaseUrl,
+  parseJsonResponse,
+} from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import { useAccessibility } from "../context/AccessibilityContext";
 import AuthFooter from "../components/AuthFooter";
@@ -20,8 +24,6 @@ import BackToTopButton, { SCROLL_THRESHOLD } from "../components/BackToTopButton
 import ScreenWithAccessibility from "../components/ScreenWithAccessibility";
 
 const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isPhoneValid = (phone) =>
-  /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
 const isPasswordValid = (password) => {
   if (password.length < 7) return false;
   if (!/^[\p{L}\p{N}]+$/u.test(password)) return false;
@@ -37,7 +39,6 @@ export default function RegisterScreen({ navigation }) {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    phone: "",
     password: "",
   });
   const [touched, setTouched] = useState({});
@@ -64,7 +65,6 @@ export default function RegisterScreen({ navigation }) {
   const isFormValid = () =>
     form.fullName.trim().length >= 2 &&
     isEmailValid(form.email) &&
-    isPhoneValid(form.phone) &&
     isPasswordValid(form.password);
 
   const handleSubmit = async () => {
@@ -72,7 +72,6 @@ export default function RegisterScreen({ navigation }) {
       refreshUser({
         fullName: form.fullName,
         email: form.email,
-        phone: form.phone,
       });
       navigation.replace("QrGenerator");
       return;
@@ -87,22 +86,35 @@ export default function RegisterScreen({ navigation }) {
     setError("");
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
+      const response = await apiFetchWithTimeout(
+        `${getApiBaseUrl()}/api/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: form.fullName,
+            email: form.email,
+            password: form.password,
+          }),
+        },
+        20000,
+      );
 
-      const data = await response.json();
+      const data = await parseJsonResponse(response);
       if (!response.ok) {
         throw new Error(data.error || "ההרשמה נכשלה");
       }
 
-      refreshUser(data.user);
+      await refreshUser(data.user, data.token);
       navigation.replace("QrGenerator");
     } catch (err) {
-      setError(err.message || "ההרשמה נכשלה");
+      if (err?.name === "AbortError") {
+        setError(
+          "השרת לא הגיב בזמן. ודא שה-backend רץ והגדר ב-mobile/.env: EXPO_PUBLIC_API_URL=http://<IP_המחשב>:5000",
+        );
+      } else {
+        setError(err.message || "ההרשמה נכשלה");
+      }
     } finally {
       setLoading(false);
     }
@@ -168,27 +180,6 @@ export default function RegisterScreen({ navigation }) {
             />
             {touched.email && !isEmailValid(form.email) && (
               <Text style={styles.validationText}>נא להזין אימייל תקין</Text>
-            )}
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.label}>טלפון</Text>
-            <TextInput
-              style={[
-                styles.input,
-                touched.phone && !isPhoneValid(form.phone) && styles.inputInvalid,
-              ]}
-              value={form.phone}
-              onChangeText={(text) => handleChange("phone", text)}
-              onBlur={() => handleBlur("phone")}
-              placeholder="ספרות בלבד"
-              keyboardType="phone-pad"
-              textAlign="right"
-            />
-            {touched.phone && !isPhoneValid(form.phone) && (
-              <Text style={styles.validationText}>
-                נא להזין 9-11 ספרות בלבד
-              </Text>
             )}
           </View>
 
