@@ -4,8 +4,8 @@ function SiteFooter() {
   return (
     <footer className="site-footer mt-5" dir="rtl">
       <div className="container py-4">
-        <div className="row g-4">
-          <div className="col-md-4">
+        <div className="row g-4 g-lg-5 justify-content-center footer-grid">
+          <div className="col-12 col-md-4 footer-col">
             <h6 className="footer-title">מחולל QR</h6>
             <p className="footer-text mb-2">
               מחולל QR מקצועי ליצירת קודים חכמים לאתרים, קבצים, אנשי קשר,
@@ -16,11 +16,11 @@ function SiteFooter() {
             </p>
           </div>
 
-          <div className="col-6 col-md-4">
+          <div className="col-12 col-md-4 footer-col">
             <h6 className="footer-title">ניווט מהיר</h6>
             <ul className="footer-links list-unstyled mb-0">
               <li>
-                <Link to="/">מחולל QR</Link>
+                <Link to="/create">מחולל QR</Link>
               </li>
               <li>
                 <Link to="/learn-qr">מה זה QR?</Link>
@@ -34,7 +34,7 @@ function SiteFooter() {
             </ul>
           </div>
 
-          <div className="col-6 col-md-4">
+          <div className="col-12 col-md-4 footer-col">
             <h6 className="footer-title">מידע ותמיכה</h6>
             <ul className="footer-links list-unstyled mb-0">
               <li>

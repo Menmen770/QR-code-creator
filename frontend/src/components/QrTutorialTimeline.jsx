@@ -2,7 +2,7 @@ import step1Img from "../assets/tutorial/step1.png";
 import step2Img from "../assets/tutorial/step2.png";
 import step3Img from "../assets/tutorial/step3.png";
 
-export default function QrTutorialTimeline() {
+export default function QrTutorialTimeline({ footer = null }) {
   const steps = [
     {
       num: 1,
@@ -51,17 +51,17 @@ export default function QrTutorialTimeline() {
                     <p>{step.desc}</p>
                   </div>
                 </div>
-                <div
-                  className={`qr-timeline-side qr-timeline-img-wrap ${
-                    step.num <= 2 ? "qr-timeline-img-lift" : ""
-                  }`}
-                >
+                <div className="qr-timeline-side qr-timeline-img-wrap">
                   <img src={step.img} alt={`שלב ${step.num}: ${step.title}`} />
                 </div>
               </div>
             </div>
           ))}
         </div>
+
+        {footer ? (
+          <div className="qr-tutorial-timeline-footer">{footer}</div>
+        ) : null}
       </div>
     </section>
   );

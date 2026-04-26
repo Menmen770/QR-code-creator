@@ -44,7 +44,7 @@ function MainNavbar() {
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ firstName: "", phone: "" });
+  const [profileForm, setProfileForm] = useState({ firstName: "" });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [recentQrs, setRecentQrs] = useState([]);
@@ -70,7 +70,6 @@ function MainNavbar() {
             setUser(currentUser);
             setProfileForm({
               firstName: getFirstName(currentUser?.fullName),
-              phone: currentUser?.phone || "",
             });
           } else {
             setUser(null);
@@ -147,11 +146,12 @@ function MainNavbar() {
         setRecentQrs(
           rows.map((row) => ({
             id: row._id,
-            value: row.qrValue,
+            value: row.displayName || row.qrValue,
             createdAt: row.createdAt,
             fullPayload: {
               qrType: row.qrType,
               qrValue: row.qrValue,
+              displayName: row.displayName || "",
               qrInputs: row.qrInputs || {},
               style: row.style || {},
             },
@@ -212,7 +212,6 @@ function MainNavbar() {
         credentials: "include",
         body: JSON.stringify({
           fullName: profileForm.firstName,
-          phone: profileForm.phone,
         }),
       });
 
@@ -225,7 +224,6 @@ function MainNavbar() {
       setUser(data.user);
       setProfileForm({
         firstName: getFirstName(data.user.fullName),
-        phone: data.user.phone || "",
       });
       setProfileMessage("הפרטים נשמרו בהצלחה");
     } catch (error) {
@@ -248,7 +246,7 @@ function MainNavbar() {
 
   const handleSavedQrClick = (item) => {
     if (!item?.fullPayload) return;
-    navigate("/", { state: { loadSavedQr: item.fullPayload } });
+    navigate("/create", { state: { loadSavedQr: item.fullPayload } });
     setIsMenuOpen(false);
     setExpandedPanel(null);
   };
@@ -308,18 +306,6 @@ function MainNavbar() {
                           setProfileForm((prev) => ({
                             ...prev,
                             firstName: e.target.value,
-                          }))
-                        }
-                      />
-
-                      <label className="form-label mb-1">טלפון</label>
-                      <input
-                        className="form-control form-control-sm mb-2"
-                        value={profileForm.phone}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
                           }))
                         }
                       />
@@ -422,14 +408,15 @@ function MainNavbar() {
 
         <button
           className="navbar-brand d-flex align-items-center"
-          onClick={() => (window.location.href = "/")}
+          type="button"
+          onClick={() => navigate("/")}
           style={{
             border: "none",
             background: "none",
             cursor: "pointer",
             padding: 0,
           }}
-          title="Back to home"
+          title="חזרה לעמוד הבית"
         >
           <img src={logo} alt="QR Master" className="brand-logo" />
         </button>

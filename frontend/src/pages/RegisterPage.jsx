@@ -6,7 +6,6 @@ import logo from "../assets/logo-full.png";
 import { API_BASE } from "../config";
 
 const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isPhoneValid = (phone) => /^[0-9]{9,11}$/.test(phone.replace(/\D/g, ""));
 const isPasswordValid = (password) => {
   if (password.length < 7) return false;
   if (!/^[\p{L}\p{N}]+$/u.test(password)) return false;
@@ -19,7 +18,6 @@ function RegisterPage() {
   const [form, setForm] = useState({
     fullName: "",
     email: "",
-    phone: "",
     password: "",
   });
   const [touched, setTouched] = useState({});
@@ -41,7 +39,6 @@ function RegisterPage() {
   const isFormValid = () =>
     form.fullName.trim().length >= 2 &&
     isEmailValid(form.email) &&
-    isPhoneValid(form.phone) &&
     isPasswordValid(form.password);
 
   const handleSubmit = async (e) => {
@@ -66,7 +63,11 @@ function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          fullName: form.fullName,
+          email: form.email,
+          password: form.password,
+        }),
       });
 
       const data = await response.json();
@@ -83,7 +84,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="auth-page auth-login">
+    <div className="auth-page auth-register">
       <main className="auth-main">
         <div className="container">
           <div className="row align-items-center justify-content-center auth-shell">
@@ -92,7 +93,6 @@ function RegisterPage() {
                 <div className="card-body p-4">
                   <div className="auth-header text-center">
                     <h2 className="fw-bold">יצירת חשבון</h2>
-                    <p className="text-muted">השלם הרשמה תוך כמה שניות</p>
                   </div>
 
                   {error && <div className="alert alert-danger">{error}</div>}
@@ -138,29 +138,6 @@ function RegisterPage() {
                       {touched.email && !isEmailValid(form.email) && (
                         <div className="invalid-feedback">
                           נא להזין אימייל תקין
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="form-label">טלפון</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={form.phone}
-                        onChange={handleChange}
-                        onBlur={() => handleBlur("phone")}
-                        dir="rtl"
-                        className={`form-control auth-phone-input-rtl ${
-                          touched.phone && !isPhoneValid(form.phone)
-                            ? "is-invalid"
-                            : ""
-                        }`}
-                        placeholder="ספרות בלבד"
-                      />
-                      {touched.phone && !isPhoneValid(form.phone) && (
-                        <div className="invalid-feedback">
-                          נא להזין 9-11 ספרות בלבד
                         </div>
                       )}
                     </div>
@@ -225,7 +202,16 @@ function RegisterPage() {
               </div>
             </div>
 
-            <div className="col-lg-5 d-none d-lg-flex justify-content-center">
+            <div className="col-lg-5 d-none d-lg-flex flex-column align-items-center justify-content-center auth-register-robot-col">
+              <div
+                className="auth-robot-speech"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="auth-robot-speech__text">
+                  בוא ניצור חשבון כדי שלא תאבד את ה-QR שלך.
+                </p>
+              </div>
               <div
                 className="robot-widget robot-widget-auth"
                 aria-hidden="true"

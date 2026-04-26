@@ -77,7 +77,7 @@ function LearnQrPage() {
             חוויית משתמש ומייצר מעבר מהיר בין עולם פיזי לדיגיטלי.
           </p>
           <div className="mt-4">
-            <Link to="/" className="btn btn-teal">
+            <Link to="/create" className="btn btn-teal">
               יצירת QR עכשיו
             </Link>
           </div>
