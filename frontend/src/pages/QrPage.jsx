@@ -12,6 +12,7 @@ import {
 } from "../utils/qrConstants";
 import WhyUsSection from "../components/WhyUsSection";
 import PromotionalMaterialsSection from "../components/PromotionalMaterialsSection";
+import QrTutorialTimeline from "../components/QrTutorialTimeline";
 import {
   QrTypeSelector,
   QrContentStep,
@@ -99,16 +100,17 @@ function QrPage() {
           </p>
         </section>
 
-        <QrTypeSelector
-          qrType={qrType}
-          qrTypesMain={QR_TYPES_MAIN}
-          qrTypesMore={QR_TYPES_MORE}
-          showMoreOptions={showMoreOptions}
-          setShowMoreOptions={setShowMoreOptions}
-          onSelectType={handleQRTypeChange}
-        />
+        <div id="qr-generator">
+          <QrTypeSelector
+            qrType={qrType}
+            qrTypesMain={QR_TYPES_MAIN}
+            qrTypesMore={QR_TYPES_MORE}
+            showMoreOptions={showMoreOptions}
+            setShowMoreOptions={setShowMoreOptions}
+            onSelectType={handleQRTypeChange}
+          />
 
-        <div className="row g-4" style={{ alignItems: "stretch" }}>
+          <div className="row g-4" style={{ alignItems: "stretch" }}>
           <div className="col-lg-7 d-flex flex-column gap-4">
             <div className="card qr-card shadow-sm flex-grow-1">
               <div className="card-body p-4 d-flex flex-column">
@@ -175,9 +177,9 @@ function QrPage() {
 
           <QrPreviewPanel
             qrType={qrType}
+            qrInputs={qrInputs}
             pdfInputMode={pdfInputMode}
             pdfFile={pdfFile}
-            qrInputs={qrInputs}
             previewImage={previewImage}
             qrImage={qrImage}
             error={error}
@@ -192,17 +194,30 @@ function QrPage() {
             saveQrSaving={saveQrSaving}
             saveQrMessage={saveQrMessage}
           />
+          </div>
         </div>
 
         <WhyUsSection />
         <PromotionalMaterialsSection />
-      </main>
 
-      <footer className="qr-footer mt-5">
-        <div className="container text-center small text-muted">
-          Built for your portfolio · Privacy · Terms
-        </div>
-      </footer>
+        <section className="qr-home-howto" dir="rtl" aria-label="איך יוצרים קוד QR">
+          <QrTutorialTimeline
+            footer={
+              <button
+                type="button"
+                className="qr-home-create-cta"
+                onClick={() =>
+                  document
+                    .getElementById("qr-generator")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+              >
+                צור QR עכשיו
+              </button>
+            }
+          />
+        </section>
+      </main>
     </div>
   );
 }

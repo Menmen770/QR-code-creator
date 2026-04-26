@@ -356,10 +356,15 @@ export function useQrGenerator() {
     return () => clearTimeout(t);
   }, [saveQrMessage]);
 
-  const buildSavePayload = useCallback(() => {
+  const buildSavePayload = useCallback((extra = {}) => {
+    const nameExtra =
+      typeof extra.displayName === "string"
+        ? extra.displayName.trim().slice(0, 120)
+        : "";
     return {
       qrType,
       qrValue: String(qrValue || "").trim(),
+      displayName: nameExtra,
       qrInputs,
       style: {
         fgColor,
@@ -424,11 +429,16 @@ export function useQrGenerator() {
     setPdfFile(null);
   }, []);
 
-  const saveQr = useCallback(async () => {
-    if (!qrImage) return;
+  const saveQr = useCallback(async (displayName) => {
+    if (!qrImage) return false;
+    const nameTrim = String(displayName ?? "").trim();
+    if (!nameTrim) {
+      setSaveQrMessage("נא להזין שם לקוד");
+      return false;
+    }
     setSaveQrSaving(true);
     setSaveQrMessage(null);
-    const payload = buildSavePayload();
+    const payload = buildSavePayload({ displayName: nameTrim });
     try {
       const res = await fetch(`${API_BASE}/api/saved-qrs`, {
         method: "POST",
@@ -447,7 +457,7 @@ export function useQrGenerator() {
         setSaveQrMessage(
           data.updated ? "עודכן באוסף" : "נשמר לאוסף",
         );
-        return;
+        return true;
       }
       if (res.status === 401) {
         try {
@@ -459,31 +469,30 @@ export function useQrGenerator() {
             fullPayload: {
               qrType: payload.qrType,
               qrValue: payload.qrValue,
+              displayName: nameTrim,
               qrInputs: payload.qrInputs,
               style: payload.style,
             },
           };
           const existing = loadRecentQrItems();
-          const deduped = existing.filter(
-            (item) =>
-              !(item.type === entry.type && item.value === entry.value),
-          );
-          const next = [entry, ...deduped].slice(0, 8);
+          const next = [entry, ...existing].slice(0, 8);
           saveRecentQrItems(next);
           window.dispatchEvent(new Event("qr-recent-updated"));
         } catch {
           // ignore localStorage issues
         }
         setSaveQrMessage("נשמר מקומית בלבד (נדרשת התחברות לשמירה בענן)");
-        return;
+        return true;
       }
       setSaveQrMessage(data?.error || "השמירה נכשלה");
+      return false;
     } catch {
       setSaveQrMessage("השמירה נכשלה");
+      return false;
     } finally {
       setSaveQrSaving(false);
     }
-  }, [qrImage, buildSavePayload]);
+  }, [qrImage, buildSavePayload, qrType]);
 
   const downloadQR = useCallback(
     (format) => {

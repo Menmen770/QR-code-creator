@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { FiFileText, FiSave, FiChevronDown } from "react-icons/fi";
+import SimpleTextModal from "../SimpleTextModal";
 
 /**
  * שלב 3: תצוגה מקדימה והורדות.
  */
 function QrPreviewPanel({
   qrType,
+  qrInputs,
   pdfInputMode,
   pdfFile,
-  qrInputs,
   previewImage,
   qrImage,
   error,
@@ -31,6 +32,9 @@ function QrPreviewPanel({
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState("png");
   const downloadSplitRef = useRef(null);
+
+  const [saveNameModalOpen, setSaveNameModalOpen] = useState(false);
+  const [saveNameBusy, setSaveNameBusy] = useState(false);
 
   const downloadFormatLabels = {
     png: "PNG",
@@ -58,8 +62,33 @@ function QrPreviewPanel({
     setDownloadMenuOpen(false);
   };
 
+  const handleConfirmSaveName = useCallback(
+    async (name) => {
+      setSaveNameBusy(true);
+      try {
+        return await saveQr(name);
+      } finally {
+        setSaveNameBusy(false);
+      }
+    },
+    [saveQr],
+  );
+
   return (
     <div className="col-lg-5">
+      <SimpleTextModal
+        open={saveNameModalOpen}
+        onClose={() => !saveNameBusy && setSaveNameModalOpen(false)}
+        title="שמירה לאוסף"
+        description="בחר שם שיעזור לך למצוא את הקוד בדף «הקודים שלי»."
+        label="שם לקוד"
+        placeholder="למשל: כרטיס ביקור, קמפיין אביב…"
+        confirmLabel="שמור לאוסף"
+        busy={saveNameBusy}
+        defaultValue=""
+        onConfirm={handleConfirmSaveName}
+      />
+
       <div className="card qr-card shadow-sm h-100">
         <div className="card-body p-4 d-flex flex-column">
           <div className="d-flex align-items-center gap-3 mb-4">
@@ -202,7 +231,7 @@ function QrPreviewPanel({
               <button
                 type="button"
                 className="btn btn-outline-teal w-100 h-100 d-inline-flex align-items-center justify-content-center gap-2 px-2 text-wrap"
-                onClick={() => void saveQr()}
+                onClick={() => setSaveNameModalOpen(true)}
                 disabled={!qrImage || loading || saveQrSaving}
                 title="שמירה לאוסף"
               >
