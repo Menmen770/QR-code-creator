@@ -7,8 +7,10 @@ const router = express.Router();
 
 const MAX_LOGO_URL_LENGTH = 450_000;
 
+const MAX_DISPLAY_NAME = 120;
+
 function trimBodyForStorage(body) {
-  const { qrType, qrValue, qrInputs, style } = body;
+  const { qrType, qrValue, qrInputs, style, displayName } = body;
   if (!qrType || typeof qrType !== "string") {
     return null;
   }
@@ -18,9 +20,12 @@ function trimBodyForStorage(body) {
   }
   const valueTrimmed =
     typeof qrValue === "string" ? qrValue.trim() : "";
+  const nameRaw = typeof displayName === "string" ? displayName.trim() : "";
+  const displayNameTrimmed = nameRaw.slice(0, MAX_DISPLAY_NAME);
   return {
     qrType,
     qrValue: valueTrimmed,
+    displayName: displayNameTrimmed,
     qrInputs: qrInputs && typeof qrInputs === "object" ? qrInputs : {},
     style: {
       fgColor: style?.fgColor ?? "#000000",
@@ -38,13 +43,26 @@ function trimBodyForStorage(body) {
   };
 }
 
+function escapeRegex(str) {
+  return String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 router.get("/saved-qrs", requireAuth, async (req, res) => {
   try {
     const limit = Math.min(
       50,
       Math.max(1, parseInt(String(req.query.limit || "20"), 10) || 20),
     );
-    const items = await SavedQr.find({ userId: req.session.userId })
+    const qRaw =
+      typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const filter = { userId: req.userId };
+    if (qRaw) {
+      filter.displayName = {
+        $regex: escapeRegex(qRaw),
+        $options: "i",
+      };
+    }
+    const items = await SavedQr.find(filter)
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
@@ -60,33 +78,13 @@ router.post("/saved-qrs", requireAuth, async (req, res) => {
   if (!trimmed) {
     return res.status(400).json({ error: "qrType is required" });
   }
+  if (!trimmed.displayName) {
+    return res
+      .status(400)
+      .json({ error: "displayName is required to save a QR code" });
+  }
   try {
-    const userId = req.session.userId;
-    const filter = {
-      userId,
-      qrType: trimmed.qrType,
-      qrValue: trimmed.qrValue,
-    };
-
-    const existing = await SavedQr.findOne(filter);
-    if (existing) {
-      existing.qrInputs = trimmed.qrInputs;
-      existing.style = trimmed.style;
-      await existing.save();
-      return res.json({
-        updated: true,
-        saved: {
-          _id: existing._id,
-          qrType: existing.qrType,
-          qrValue: existing.qrValue,
-          qrInputs: existing.qrInputs,
-          style: existing.style,
-          createdAt: existing.createdAt,
-          updatedAt: existing.updatedAt,
-        },
-      });
-    }
-
+    const userId = req.userId;
     const doc = await SavedQr.create({
       userId,
       ...trimmed,
@@ -97,6 +95,7 @@ router.post("/saved-qrs", requireAuth, async (req, res) => {
         _id: doc._id,
         qrType: doc.qrType,
         qrValue: doc.qrValue,
+        displayName: doc.displayName || "",
         qrInputs: doc.qrInputs,
         style: doc.style,
         createdAt: doc.createdAt,
@@ -116,7 +115,7 @@ router.delete("/saved-qrs/:id", requireAuth, async (req, res) => {
   try {
     const result = await SavedQr.deleteOne({
       _id: id,
-      userId: req.session.userId,
+      userId: req.userId,
     });
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Not found" });

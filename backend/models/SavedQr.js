@@ -29,10 +29,12 @@ const savedQrSchema = new mongoose.Schema(
     qrValue: { type: String, default: "" },
     qrInputs: { type: mongoose.Schema.Types.Mixed, default: {} },
     style: { type: styleSchema, default: () => ({}) },
+    displayName: { type: String, default: "", trim: true },
   },
   { timestamps: true },
 );
 
 savedQrSchema.index({ userId: 1, createdAt: -1 });
+savedQrSchema.index({ userId: 1, displayName: 1 });
 
 module.exports = mongoose.model("SavedQr", savedQrSchema);
