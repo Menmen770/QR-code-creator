@@ -1,0 +1,131 @@
+import {
+  getStickerOverlayUrl,
+  isImageStickerId,
+  STICKER_QR_NORMALIZED_RECT,
+} from "../assets/stickerAssets";
+import { drawStickerImageComposite } from "./stickerCompose";
+import {
+  getPresetRasterInsetForDataUrl,
+  isPresetLogoDataUrl,
+} from "./presetBrandLogos";
+import { isSvgDataUrl, rasterizeSvgDataUrlToPng } from "./rasterizeSvgLogo";
+
+const MAX_LOGO_FOR_PREVIEW = 400_000;
+
+function buildBgForApi(style) {
+  const stickerType = style.stickerType || "none";
+  const bgColorMode = style.bgColorMode || "solid";
+  const bg = style.bgColor || "#ffffff";
+  if (stickerType !== "none") return "transparent";
+  if (bgColorMode === "effect" || bgColorMode === "none") return "transparent";
+  return bg;
+}
+
+function compositeStickerPreview(qrDataUrl, stickerType, fgColor) {
+  return new Promise((resolve) => {
+    const overlayUrl = getStickerOverlayUrl(stickerType);
+    if (!overlayUrl || !isImageStickerId(stickerType)) {
+      resolve(qrDataUrl);
+      return;
+    }
+    const qrImg = new Image();
+    const overlayImg = new Image();
+    let qrOk = false;
+    let ovOk = false;
+    const run = () => {
+      if (!qrOk || !ovOk) return;
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d", { alpha: true });
+        drawStickerImageComposite(
+          ctx,
+          qrImg,
+          overlayImg,
+          fgColor,
+          STICKER_QR_NORMALIZED_RECT,
+        );
+        resolve(canvas.toDataURL("image/png"));
+      } catch {
+        resolve(qrDataUrl);
+      }
+    };
+    qrImg.onload = () => {
+      qrOk = true;
+      run();
+    };
+    overlayImg.onload = () => {
+      ovOk = true;
+      run();
+    };
+    qrImg.onerror = () => resolve(qrDataUrl);
+    overlayImg.onerror = () => resolve(qrDataUrl);
+    qrImg.src = qrDataUrl;
+    overlayImg.src = overlayUrl;
+  });
+}
+
+/**
+ * מחזיר data URL לתצוגת כרטיסייה (שרת generate-qr + מדבקה בצד לקוח אם צריך).
+ */
+export async function getSavedQrPreviewDataUrl(row, apiBase) {
+  const style = row?.style && typeof row.style === "object" ? row.style : {};
+  const text = String(row?.qrValue || "").trim();
+  if (!text) return "";
+
+  const fg = style.fgColor || "#000000";
+  const dotsType = style.dotsType || "square";
+  const cornersType = style.cornersType || "square";
+  const logoShape = style.logoShape || "square";
+  const stickerType = style.stickerType || "none";
+
+  let logoUrl = typeof style.logoUrl === "string" ? style.logoUrl : "";
+  if (logoUrl.length > MAX_LOGO_FOR_PREVIEW) {
+    logoUrl = "";
+  }
+  if (logoUrl && isSvgDataUrl(logoUrl)) {
+    try {
+      const inset = isPresetLogoDataUrl(logoUrl)
+        ? getPresetRasterInsetForDataUrl(logoUrl)
+        : 1;
+      logoUrl = await rasterizeSvgDataUrlToPng(logoUrl, { insetScale: inset });
+    } catch {
+      logoUrl = "";
+    }
+  }
+
+  const body = {
+    text,
+    color: fg,
+    bgColor: buildBgForApi(style),
+    dotsType,
+    cornersType,
+    logoShape,
+  };
+  if (logoUrl) body.image = logoUrl;
+
+  const res = await fetch(`${apiBase}/api/generate-qr`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) return "";
+  const data = await res.json().catch(() => ({}));
+  let qrImage = data.qrImage || "";
+  if (!qrImage) return "";
+
+  if (stickerType !== "none") {
+    qrImage = await compositeStickerPreview(qrImage, stickerType, fg);
+  }
+  return qrImage;
+}
+
+export function downloadDataUrlPng(dataUrl, filename) {
+  if (!dataUrl || !String(dataUrl).startsWith("data:")) return;
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename || "qr-code.png";
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}

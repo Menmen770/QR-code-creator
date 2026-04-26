@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import QrPage from "./pages/QrPage";
+import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import LearnQrPage from "./pages/LearnQrPage";
@@ -61,7 +62,8 @@ function App() {
       <BackToTopButton />
       <Routes>
         <Route element={<ProtectedLayout />}>
-          <Route path="/" element={<QrPage />} />
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/create" element={<QrPage />} />
           <Route path="/learn-qr" element={<LearnQrPage />} />
         </Route>
 
