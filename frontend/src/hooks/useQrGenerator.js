@@ -17,6 +17,7 @@ import {
   rasterizeSvgDataUrlToPng,
 } from "../utils/rasterizeSvgLogo";
 import { loadRecentQrItems, saveRecentQrItems } from "../utils/recentQrStorage";
+import { buildEncodedQrText } from "../utils/qrEncodedText";
 
 function downloadBlobAsFile(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -92,52 +93,9 @@ export function useQrGenerator() {
     tiktok: "username",
   });
 
-  const buildQRValue = (type, inputs) => {
-    switch (type) {
-      case "url":
-        return inputs.url;
-      case "pdf":
-        return inputs.pdf;
-      case "whatsapp":
-        return `https://wa.me/${inputs.whatsapp.phone.replace(/\D/g, "")}?text=${encodeURIComponent(inputs.whatsapp.message)}`;
-      case "email": {
-        const emailParams = new URLSearchParams();
-        if (inputs.email.subject) {
-          emailParams.append("subject", inputs.email.subject);
-        }
-        if (inputs.email.message) {
-          emailParams.append("body", inputs.email.message);
-        }
-        return `mailto:${inputs.email.email}${emailParams.toString() ? "?" + emailParams.toString() : ""}`;
-      }
-      case "phone":
-        return `tel:${inputs.phone}`;
-      case "sms":
-        return `sms:${inputs.sms.phone}?body=${encodeURIComponent(inputs.sms.message)}`;
-      case "wifi":
-        return `WIFI:T:${inputs.wifi.security};S:${inputs.wifi.ssid};P:${inputs.wifi.password};;`;
-      case "contact":
-        return `BEGIN:VCARD\nVERSION:3.0\nFN:${inputs.contact.name}\nTEL:${inputs.contact.phone}\nEMAIL:${inputs.contact.email}\nEND:VCARD`;
-      case "facebook":
-        return `https://facebook.com/${inputs.facebook}`;
-      case "instagram":
-        return `https://instagram.com/${inputs.instagram}`;
-      case "twitter":
-        return `https://twitter.com/${inputs.twitter}`;
-      case "linkedin":
-        return `https://linkedin.com/in/${inputs.linkedin}`;
-      case "youtube":
-        return `https://youtube.com/@${inputs.youtube}`;
-      case "tiktok":
-        return `https://tiktok.com/@${inputs.tiktok}`;
-      default:
-        return inputs.url;
-    }
-  };
-
   const handleQRTypeChange = (newType) => {
     setQrType(newType);
-    setQrValue(buildQRValue(newType, qrInputs));
+    setQrValue(buildEncodedQrText(newType, qrInputs));
   };
 
   const handleInputChange = (path, value) => {
@@ -149,7 +107,7 @@ export function useQrGenerator() {
     }
     obj[keys[keys.length - 1]] = value;
     setQrInputs(newInputs);
-    setQrValue(buildQRValue(qrType, newInputs));
+    setQrValue(buildEncodedQrText(qrType, newInputs));
   };
 
   const handlePdfDrop = (e) => {

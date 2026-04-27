@@ -49,13 +49,17 @@ function QrStylePanel({
   return (
     <div className="card qr-card shadow-sm flex-grow-1">
       <div className="card-body p-4 d-flex flex-column">
-        <div className="qr-style-header-row mb-3">
-          <div className="d-flex align-items-center gap-3">
-            <span className="qr-step">2</span>
-            <h5 className="mb-0">התאם את העיצוב</h5>
-          </div>
+        <div className="d-flex align-items-center gap-3 mb-3">
+          <span className="qr-step">2</span>
+          <h5 className="mb-0">התאם את העיצוב</h5>
+        </div>
 
-          <ul className="nav nav-pills qr-tabs" role="tablist">
+        <div className="qr-style-panel-layout d-flex flex-column gap-3 align-items-stretch min-w-0">
+          <ul
+            className="nav nav-pills qr-tabs qr-style-tabs-rail flex-row flex-wrap justify-content-end w-100 mb-0"
+            role="tablist"
+            aria-label="לשוניות עיצוב"
+          >
             <li className="nav-item" role="presentation">
               <button
                 type="button"
@@ -87,7 +91,10 @@ function QrStylePanel({
                 aria-selected={activeTab === "logo"}
                 className={tabClass("logo")}
                 aria-label="עיצוב: לוגו במרכז"
-                onClick={() => setActiveTab("logo")}
+                onClick={() => {
+                  setActiveTab("logo");
+                  setLogoShape("circle");
+                }}
               >
                 לוגו
               </button>
@@ -105,8 +112,8 @@ function QrStylePanel({
               </button>
             </li>
           </ul>
-        </div>
 
+          <div className="qr-style-panel-body flex-grow-1 min-w-0">
         {activeTab === "color" && (
           <QrStyleColorTab
             fgColor={fgColor}
@@ -165,6 +172,8 @@ function QrStylePanel({
             מייצר...
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

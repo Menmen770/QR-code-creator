@@ -1,16 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  FiChevronDown,
-  FiChevronUp,
-  FiClock,
-  FiLogOut,
-  FiSave,
-  FiUser,
-} from "react-icons/fi";
+import { FiBookOpen, FiGrid, FiLogOut, FiPlusCircle } from "react-icons/fi";
 import logo from "../assets/logo-full.png";
 import { API_BASE } from "../config";
-import { loadRecentQrItems } from "../utils/recentQrStorage";
 
 const getGreetingByHour = () => {
   const hour = new Date().getHours();
@@ -18,19 +10,6 @@ const getGreetingByHour = () => {
   if (hour >= 12 && hour < 17) return "צהריים טובים";
   if (hour >= 17 && hour < 21) return "ערב טוב";
   return "לילה טוב";
-};
-
-const formatTime = (value) => {
-  try {
-    return new Date(value).toLocaleString("he-IL", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "";
-  }
 };
 
 const getFirstName = (fullName) => {
@@ -44,11 +23,6 @@ function MainNavbar() {
   const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ firstName: "" });
-  const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [profileMessage, setProfileMessage] = useState("");
-  const [recentQrs, setRecentQrs] = useState([]);
-  const [expandedPanel, setExpandedPanel] = useState(null);
   const menuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -68,9 +42,6 @@ function MainNavbar() {
             const data = await response.json();
             const currentUser = data?.user || null;
             setUser(currentUser);
-            setProfileForm({
-              firstName: getFirstName(currentUser?.fullName),
-            });
           } else {
             setUser(null);
           }
@@ -95,11 +66,29 @@ function MainNavbar() {
   }, [location.pathname]);
 
   useEffect(() => {
+    const refreshUser = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
+          credentials: "include",
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        setUser(data?.user || null);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    window.addEventListener("user-profile-updated", refreshUser);
+    return () =>
+      window.removeEventListener("user-profile-updated", refreshUser);
+  }, []);
+
+  useEffect(() => {
     const handleOutside = (event) => {
       if (!menuRef.current) return;
       if (!menuRef.current.contains(event.target)) {
         setIsMenuOpen(false);
-        setExpandedPanel(null);
       }
     };
 
@@ -107,82 +96,7 @@ function MainNavbar() {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, []);
 
-  useEffect(() => {
-    const loadRecentQrs = async () => {
-      if (!isAuthenticated) {
-        const parsed = loadRecentQrItems();
-        const list = Array.isArray(parsed) ? parsed.slice(0, 5) : [];
-        setRecentQrs(
-          list.map((r) => ({
-            id: r.id,
-            value: r.value,
-            createdAt: r.createdAt,
-            fullPayload:
-              r.fullPayload ||
-              (r.type === "url"
-                ? {
-                    qrType: "url",
-                    qrValue: r.value || "",
-                    qrInputs: { url: r.value || "" },
-                    style: {},
-                  }
-                : {
-                    qrType: r.type || "url",
-                    qrValue: r.value || "",
-                    qrInputs: {},
-                    style: {},
-                  }),
-          })),
-        );
-        return;
-      }
-      try {
-        const res = await fetch(`${API_BASE}/api/saved-qrs?limit=5`, {
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("failed");
-        const data = await res.json();
-        const rows = Array.isArray(data.items) ? data.items : [];
-        setRecentQrs(
-          rows.map((row) => ({
-            id: row._id,
-            value: row.displayName || row.qrValue,
-            createdAt: row.createdAt,
-            fullPayload: {
-              qrType: row.qrType,
-              qrValue: row.qrValue,
-              displayName: row.displayName || "",
-              qrInputs: row.qrInputs || {},
-              style: row.style || {},
-            },
-          })),
-        );
-      } catch {
-        setRecentQrs([]);
-      }
-    };
-
-    if (isMenuOpen) {
-      loadRecentQrs();
-    }
-
-    const handleServerUpdate = () => {
-      if (isAuthenticated && isMenuOpen) loadRecentQrs();
-    };
-    const handleLocalUpdate = () => {
-      if (!isAuthenticated) loadRecentQrs();
-    };
-
-    window.addEventListener("qr-saved-updated", handleServerUpdate);
-    window.addEventListener("qr-recent-updated", handleLocalUpdate);
-    window.addEventListener("storage", handleLocalUpdate);
-
-    return () => {
-      window.removeEventListener("qr-saved-updated", handleServerUpdate);
-      window.removeEventListener("qr-recent-updated", handleLocalUpdate);
-      window.removeEventListener("storage", handleLocalUpdate);
-    };
-  }, [isMenuOpen, isAuthenticated]);
+  const closeMenu = () => setIsMenuOpen(false);
 
   const handleLogout = async () => {
     try {
@@ -196,40 +110,7 @@ function MainNavbar() {
       setIsAuthenticated(false);
       setUser(null);
       setIsMenuOpen(false);
-      setExpandedPanel(null);
       navigate("/login", { replace: true });
-    }
-  };
-
-  const handleProfileSave = async () => {
-    setProfileMessage("");
-    setIsSavingProfile(true);
-
-    try {
-      const response = await fetch(`${API_BASE}/api/auth/profile`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          fullName: profileForm.firstName,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.error || "שמירה נכשלה");
-      }
-
-      setUser(data.user);
-      setProfileForm({
-        firstName: getFirstName(data.user.fullName),
-      });
-      setProfileMessage("הפרטים נשמרו בהצלחה");
-    } catch (error) {
-      setProfileMessage(error.message || "שמירה נכשלה");
-    } finally {
-      setIsSavingProfile(false);
     }
   };
 
@@ -238,18 +119,6 @@ function MainNavbar() {
     ? firstName.trim().charAt(0).toUpperCase()
     : "U";
   const greeting = getGreetingByHour();
-
-  const togglePanel = (panelName) => {
-    setProfileMessage("");
-    setExpandedPanel((prev) => (prev === panelName ? null : panelName));
-  };
-
-  const handleSavedQrClick = (item) => {
-    if (!item?.fullPayload) return;
-    navigate("/create", { state: { loadSavedQr: item.fullPayload } });
-    setIsMenuOpen(false);
-    setExpandedPanel(null);
-  };
 
   return (
     <header className="navbar navbar-expand-lg bg-white border-bottom sticky-top shadow-sm">
@@ -260,14 +129,7 @@ function MainNavbar() {
               className="navbar-user-trigger"
               title={firstName}
               onClick={() => {
-                setIsMenuOpen((prev) => {
-                  const next = !prev;
-                  if (!next) {
-                    setExpandedPanel(null);
-                    setProfileMessage("");
-                  }
-                  return next;
-                });
+                setIsMenuOpen((prev) => !prev);
               }}
             >
               <span className="navbar-user-avatar">{userInitial}</span>
@@ -279,116 +141,49 @@ function MainNavbar() {
 
             {isMenuOpen && (
               <div className="navbar-user-menu card shadow-sm" dir="rtl">
-                <div className="navbar-menu-section">
+                <nav
+                  className="navbar-user-nav-stack"
+                  aria-label="ניווט מהיר"
+                >
+                  <Link
+                    to="/create"
+                    className="navbar-user-nav-link"
+                    onClick={closeMenu}
+                  >
+                    <span className="navbar-user-nav-icon" aria-hidden>
+                      <FiPlusCircle strokeWidth={2.25} />
+                    </span>
+                    מחולל QR
+                  </Link>
+                  <Link
+                    to="/"
+                    className="navbar-user-nav-link"
+                    onClick={closeMenu}
+                  >
+                    <span className="navbar-user-nav-icon" aria-hidden>
+                      <FiGrid strokeWidth={2.25} />
+                    </span>
+                    הקודים שלי
+                  </Link>
+                  <Link
+                    to="/learn-qr"
+                    className="navbar-user-nav-link"
+                    onClick={closeMenu}
+                  >
+                    <span className="navbar-user-nav-icon" aria-hidden>
+                      <FiBookOpen strokeWidth={2.25} />
+                    </span>
+                    מה זה QR
+                  </Link>
+                </nav>
+
+                <div className="navbar-menu-actions navbar-menu-actions--centered">
                   <button
                     type="button"
-                    className="navbar-expand-btn"
-                    onClick={() => togglePanel("profile")}
-                  >
-                    <span>
-                      <FiUser className="me-2" />
-                      עדכון פרטים
-                    </span>
-                    {expandedPanel === "profile" ? (
-                      <FiChevronUp />
-                    ) : (
-                      <FiChevronDown />
-                    )}
-                  </button>
-
-                  {expandedPanel === "profile" && (
-                    <div className="navbar-panel-content mt-2">
-                      <label className="form-label mb-1">שם פרטי</label>
-                      <input
-                        className="form-control form-control-sm mb-2"
-                        value={profileForm.firstName}
-                        onChange={(e) =>
-                          setProfileForm((prev) => ({
-                            ...prev,
-                            firstName: e.target.value,
-                          }))
-                        }
-                      />
-
-                      <label className="form-label mb-1">אימייל</label>
-                      <input
-                        className="form-control form-control-sm mb-2"
-                        value={user?.email || ""}
-                        disabled
-                      />
-
-                      <button
-                        className="btn btn-teal btn-sm w-100"
-                        onClick={handleProfileSave}
-                        disabled={isSavingProfile}
-                      >
-                        <FiSave className="me-1" />
-                        {isSavingProfile ? "שומר..." : "שמירת פרטים"}
-                      </button>
-
-                      {profileMessage && (
-                        <div className="navbar-profile-msg mt-2">
-                          {profileMessage}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="navbar-menu-section">
-                  <button
-                    type="button"
-                    className="navbar-expand-btn"
-                    onClick={() => togglePanel("recent")}
-                  >
-                    <span>
-                      <FiClock className="me-2" />
-                      האוסף שלי
-                    </span>
-                    {expandedPanel === "recent" ? (
-                      <FiChevronUp />
-                    ) : (
-                      <FiChevronDown />
-                    )}
-                  </button>
-
-                  {expandedPanel === "recent" && (
-                    <div className="navbar-panel-content mt-2">
-                      {recentQrs.length ? (
-                        <ul className="navbar-recent-list">
-                          {recentQrs.map((item) => (
-                            <li key={item.id}>
-                              <button
-                                type="button"
-                                className="navbar-recent-item"
-                                onClick={() => handleSavedQrClick(item)}
-                                title={item.value}
-                              >
-                                <span className="recent-value">
-                                  {item.value}
-                                </span>
-                                <span className="recent-time">
-                                  {formatTime(item.createdAt)}
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="navbar-empty-text mb-0">
-                          עדיין אין פריטים באוסף
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="navbar-menu-actions">
-                  <button
                     className="btn btn-logout-clean btn-sm"
                     onClick={handleLogout}
                   >
-                    <FiLogOut className="me-1" />
+                    <FiLogOut className="me-1" aria-hidden />
                     התנתקות
                   </button>
                 </div>

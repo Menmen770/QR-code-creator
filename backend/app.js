@@ -6,6 +6,7 @@ const { registerPassportStrategies } = require("./config/passport");
 const qrRoutes = require("./routes/qr");
 const authRoutes = require("./routes/auth");
 const savedQrRoutes = require("./routes/savedQr");
+const dashboardFolderRoutes = require("./routes/dashboardFolders");
 
 function createApp() {
   const app = express();
@@ -29,6 +30,7 @@ function createApp() {
   app.use("/api", qrRoutes);
   app.use("/api", authRoutes);
   app.use("/api", savedQrRoutes);
+  app.use("/api", dashboardFolderRoutes);
 
   return app;
 }

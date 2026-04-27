@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { FiFolder, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiEdit3, FiFolder, FiLayers, FiPlus, FiTrash2 } from "react-icons/fi";
 import { UNFILED_ORDER_KEY } from "../utils/dashboardFoldersStorage";
 import SimpleTextModal from "./SimpleTextModal";
+
+const ACTIVITY_FILTERS = [
+  { id: "all", label: "הכל" },
+  { id: "active", label: "פעילים" },
+  { id: "inactive", label: "לא פעילים" },
+];
 
 export default function DashboardSidebar({
   folders,
@@ -10,6 +16,10 @@ export default function DashboardSidebar({
   counts,
   onCreateFolderWithName,
   onDeleteFolder,
+  onOpenAccountSettings,
+  accountSettingsActive = false,
+  activityFilter,
+  onActivityFilterChange,
 }) {
   const [folderModalOpen, setFolderModalOpen] = useState(false);
 
@@ -30,18 +40,25 @@ export default function DashboardSidebar({
       />
 
       <div className="card-body p-3 d-flex flex-column">
-        <h2 className="h6 fw-bold text-secondary text-uppercase small mb-2">
-          תיקיות
-        </h2>
-
-        <button
-          type="button"
-          className="btn btn-outline-secondary btn-sm w-100 mb-3 d-inline-flex align-items-center justify-content-center gap-1 rounded-3 fw-semibold"
-          onClick={() => setFolderModalOpen(true)}
+        <div
+          className="dashboard-sidebar-activity"
+          role="group"
+          aria-label="סינון לפי מצב פעיל"
         >
-          <FiPlus aria-hidden />
-          צור תיקייה
-        </button>
+          {ACTIVITY_FILTERS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              className={`dashboard-sidebar-activity-btn ${
+                activityFilter === id ? "is-active" : ""
+              }`}
+              aria-pressed={activityFilter === id}
+              onClick={() => onActivityFilterChange(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         <nav className="dashboard-sidebar-nav d-flex flex-column gap-1 flex-grow-1">
           <button
@@ -51,7 +68,11 @@ export default function DashboardSidebar({
             }`}
             onClick={() => onSelectView("all")}
           >
-            <span className="fw-semibold">הכל</span>
+            <FiLayers
+              className="me-2 text-secondary flex-shrink-0"
+              aria-hidden
+            />
+            <span className="fw-semibold">כל הקודים</span>
             <span className="dashboard-sidebar-count">{counts.all}</span>
           </button>
 
@@ -102,8 +123,33 @@ export default function DashboardSidebar({
           ))}
         </nav>
 
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm w-100 mt-1 d-inline-flex align-items-center justify-content-center gap-1 rounded-3 fw-semibold"
+          onClick={() => setFolderModalOpen(true)}
+        >
+          <FiPlus aria-hidden />
+          צור תיקייה
+        </button>
+
+        <hr className="dashboard-sidebar-elegant-rule" />
+
+        <button
+          type="button"
+          className={`btn btn-sm w-100 d-inline-flex align-items-center justify-content-center gap-2 rounded-3 fw-semibold ${
+            accountSettingsActive
+              ? "btn-secondary text-white"
+              : "btn-outline-secondary"
+          }`}
+          onClick={onOpenAccountSettings}
+          aria-pressed={accountSettingsActive}
+        >
+          <FiEdit3 aria-hidden />
+          עדכון פרטים
+        </button>
+
         <p className="small text-muted mt-3 mb-0">
-          סדר ותיקיות נשמרים מקומית בדפדפן עד חיבור ל-MongoDB.
+          סדר ותיקיות נשמרים בחשבון; גיבוי מקומי בדפדפן כשהשרת לא זמין.
         </p>
       </div>
     </aside>

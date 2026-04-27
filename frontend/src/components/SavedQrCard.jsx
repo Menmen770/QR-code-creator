@@ -1,24 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FiChevronDown,
-  FiChevronLeft,
   FiClock,
   FiCopy,
   FiCornerUpLeft,
-  FiDroplet,
   FiDownload,
   FiEdit2,
+  FiExternalLink,
   FiFolder,
-  FiInfo,
   FiLink,
   FiTrash2,
 } from "react-icons/fi";
 import { API_BASE } from "../config";
 import { QR_TYPES_MAIN, QR_TYPES_MORE } from "../utils/qrConstants";
+import { effectiveSavedQrEncodedText } from "../utils/qrEncodedText";
 import {
   downloadDataUrlPng,
   getSavedQrPreviewDataUrl,
 } from "../utils/savedQrPreview";
+import SimpleTextModal from "./SimpleTextModal";
+import SavedQrStyleEditModal from "./SavedQrStyleEditModal";
 
 const QR_TYPE_LABELS = new Map(
   [...QR_TYPES_MAIN, ...QR_TYPES_MORE].map((t) => [t.value, t.label]),
@@ -60,13 +61,11 @@ function cardTitle(row) {
 
 export default function SavedQrCard({
   row,
-  isActive,
-  onToggleActive,
   onOpenEditor,
   onDuplicateStub,
-  onStatisticsStub,
   onDelete,
   onStubNotice,
+  onSavedQrFromApi,
   folderDisplayName,
   foldersForSelect,
   assignedFolderId,
@@ -77,6 +76,10 @@ export default function SavedQrCard({
   const [deleting, setDeleting] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const moveWrapRef = useRef(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameBusy, setRenameBusy] = useState(false);
+  const [styleEditOpen, setStyleEditOpen] = useState(false);
+  const [activeBusy, setActiveBusy] = useState(false);
 
   useEffect(() => {
     if (!moveOpen) return;
@@ -146,6 +149,50 @@ export default function SavedQrCard({
 
   const openEditor = () => onOpenEditor(row);
 
+  const handleOpenDestination = useCallback(() => {
+    const t = effectiveSavedQrEncodedText(row);
+    if (/^https?:\/\//i.test(t)) {
+      window.open(t, "_blank", "noopener,noreferrer");
+      return;
+    }
+    onOpenEditor(row);
+  }, [row, onOpenEditor]);
+
+  const handleRenameConfirm = useCallback(
+    async (name) => {
+      const trimmed = String(name || "").trim();
+      if (!trimmed) {
+        onStubNotice("נא להזין שם.");
+        return false;
+      }
+      setRenameBusy(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/saved-qrs/${row._id}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayName: trimmed }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data?.error || "עדכון השם נכשל");
+        }
+        const saved = data?.saved;
+        if (saved) {
+          onSavedQrFromApi(saved);
+        }
+        window.dispatchEvent(new Event("qr-saved-updated"));
+        return true;
+      } catch (e) {
+        onStubNotice(e.message || "עדכון השם נכשל");
+        return false;
+      } finally {
+        setRenameBusy(false);
+      }
+    },
+    [row._id, onSavedQrFromApi, onStubNotice],
+  );
+
   const typeLabel = QR_TYPE_LABELS.get(row.qrType) || row.qrType;
   const currentFolderId =
     assignedFolderId == null || assignedFolderId === ""
@@ -157,8 +204,62 @@ export default function SavedQrCard({
     setMoveOpen(false);
   };
 
+  const renameDefault = String(row?.displayName || "").trim();
+  const isActive = row.isActive !== false;
+
+  const handleActiveChange = useCallback(
+    async (e) => {
+      const next = e.target.checked;
+      setActiveBusy(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/saved-qrs/${row._id}`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: next }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data?.error || "עדכון מצב פעיל נכשל");
+        }
+        if (data?.saved) {
+          onSavedQrFromApi(data.saved);
+        }
+        window.dispatchEvent(new Event("qr-saved-updated"));
+      } catch (err) {
+        onStubNotice(err.message || "עדכון נכשל");
+      } finally {
+        setActiveBusy(false);
+      }
+    },
+    [row._id, onSavedQrFromApi, onStubNotice],
+  );
+
   return (
     <article className="card shadow-sm border-0 dashboard-qr-card mb-3">
+      <SavedQrStyleEditModal
+        open={styleEditOpen}
+        onClose={() => setStyleEditOpen(false)}
+        row={row}
+        onSaved={onSavedQrFromApi}
+        onError={onStubNotice}
+      />
+
+      <SimpleTextModal
+        open={renameOpen}
+        onClose={() => !renameBusy && setRenameOpen(false)}
+        title="שינוי שם הקוד"
+        description="השם מופיע בדף «הקודים שלי» ובחיפוש."
+        label="שם לקוד"
+        placeholder="למשל: קמפיין אביב"
+        confirmLabel="שמור שם"
+        busy={renameBusy}
+        defaultValue={renameDefault}
+        maxLength={120}
+        minLength={1}
+        onConfirm={handleRenameConfirm}
+      />
+
       <div
         className="card-body dashboard-qr-card-body d-flex flex-column flex-lg-row gap-3 gap-lg-4 align-items-lg-stretch"
         dir="rtl"
@@ -193,64 +294,25 @@ export default function SavedQrCard({
           </button>
         </div>
 
-        <div className="dashboard-qr-col-metrics d-flex flex-column justify-content-center gap-2 flex-shrink-0">
-          <div>
-            <span className="dashboard-qr-metric-label">סריקות כוללות</span>
-            <span className="dashboard-qr-metric-value d-block fw-bold fs-4">
-              —
-            </span>
-            <span className="small text-muted">יתעדכן עם מעקב סריקות</span>
-          </div>
-          <button
-            type="button"
-            className="btn btn-link text-decoration-none p-0 text-start dashboard-qr-stats-link"
-            onClick={() => onStatisticsStub()}
-          >
-            סטטיסטיקות
-            <FiChevronLeft className="ms-1" aria-hidden />
-          </button>
-          <div className="d-flex align-items-center gap-2 flex-wrap">
-            <span className="small text-muted mb-0">סטטוס</span>
-            <div className="form-check form-switch m-0 dashboard-qr-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                role="switch"
-                checked={isActive}
-                onChange={() => onToggleActive(row._id)}
-                id={`active-${row._id}`}
-                aria-checked={isActive}
-              />
-              <label
-                className="form-check-label small fw-semibold"
-                htmlFor={`active-${row._id}`}
-              >
-                {isActive ? "פעיל" : "מושהה"}
-              </label>
-            </div>
-            <button
-              type="button"
-              className="btn btn-link p-0 text-muted dashboard-qr-info-btn"
-              title="שינוי סטטוס יישמר בשרת אחרי עדכון מסד הנתונים"
-              onClick={() =>
-                onStubNotice(
-                  "מצב פעיל/מושהה יישמר בשרת לאחר הוספת השדות למסד הנתונים.",
-                )
-              }
-            >
-              <FiInfo size={18} aria-hidden />
-            </button>
-          </div>
-        </div>
-
         <div className="dashboard-qr-col-meta flex-grow-1 min-w-0 d-flex flex-column">
           <div className="d-flex align-items-center gap-2 text-muted small mb-1">
             <FiLink aria-hidden />
             <span>{typeLabel}</span>
           </div>
-          <h2 className="h6 fw-bold mb-2 dashboard-qr-card-title">
-            {cardTitle(row)}
-          </h2>
+          <div className="dashboard-qr-title-group d-inline-flex align-items-center gap-2 flex-wrap mb-2">
+            <h2 className="h6 fw-bold mb-0 dashboard-qr-card-title">
+              {cardTitle(row)}
+            </h2>
+            <button
+              type="button"
+              className="btn btn-link btn-sm p-0 text-secondary dashboard-qr-title-edit-btn"
+              title="שנה שם"
+              aria-label="שנה שם"
+              onClick={() => setRenameOpen(true)}
+            >
+              <FiEdit2 size={18} aria-hidden />
+            </button>
+          </div>
           <div className="small text-muted mb-1 d-flex align-items-start gap-1">
             <FiLink className="flex-shrink-0 mt-1" aria-hidden />
             <span>
@@ -264,37 +326,50 @@ export default function SavedQrCard({
               {destinationSummary(row)}
             </span>
           </div>
-          <div className="small text-muted mb-1 d-flex align-items-center gap-1">
+          <div className="small text-muted mb-2 d-flex align-items-center gap-1">
             <FiClock aria-hidden />
             {formatSavedDate(row.createdAt)}
           </div>
-          <div className="small text-muted mb-3 d-flex align-items-center gap-1">
-            <FiFolder aria-hidden />
-            {folderDisplayName || "ללא תיקייה"}
+
+          <div className="dashboard-qr-active-row d-flex align-items-center gap-2 flex-wrap mb-3">
+            <span className="dashboard-qr-active-label">פעיל</span>
+            <span dir="ltr" className="d-inline-flex align-items-center">
+              <label className="dashboard-qr-toggle-mini mb-0">
+                <span className="visually-hidden">
+                  הפעלה או השבתה של הקוד השמור
+                </span>
+                <input
+                  type="checkbox"
+                  className="dashboard-qr-toggle-mini-input"
+                  checked={isActive}
+                  disabled={activeBusy}
+                  onChange={handleActiveChange}
+                />
+                <span className="dashboard-qr-toggle-mini-track" aria-hidden="true" />
+              </label>
+            </span>
           </div>
 
           <div
-            className="dashboard-qr-move-wrap position-relative w-100 mt-auto pt-2"
+            className="dashboard-qr-folder-row position-relative mb-3 w-100"
             ref={moveWrapRef}
           >
-            <button
-              type="button"
-              className={`btn dashboard-qr-move-btn w-100 d-flex align-items-center ${
-                moveOpen ? "is-open" : ""
-              }`}
-              aria-expanded={moveOpen}
-              aria-haspopup="menu"
-              onClick={() => setMoveOpen((o) => !o)}
-            >
-              <FiFolder className="flex-shrink-0 me-2" aria-hidden />
-              <span className="flex-grow-1 text-truncate">העבר לתיקייה</span>
-              <FiChevronDown
-                className={`flex-shrink-0 ms-2 dashboard-qr-move-chevron ${
-                  moveOpen ? "is-flipped" : ""
-                }`}
-                aria-hidden
-              />
-            </button>
+            <div className="dashboard-qr-folder-trigger d-inline-flex align-items-center gap-2 flex-wrap">
+              <FiFolder className="text-muted flex-shrink-0" aria-hidden />
+              <span className="small text-muted">
+                {folderDisplayName || "ללא תיקייה"}
+              </span>
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0 text-secondary dashboard-qr-folder-edit-btn"
+                title="בחירת תיקייה"
+                aria-label="בחירת תיקייה"
+                aria-expanded={moveOpen}
+                onClick={() => setMoveOpen((o) => !o)}
+              >
+                <FiEdit2 size={16} aria-hidden />
+              </button>
+            </div>
             {moveOpen ? (
               <div className="dashboard-qr-move-panel" role="menu">
                 <button
@@ -322,46 +397,46 @@ export default function SavedQrCard({
                 ))}
                 {!foldersForSelect?.length ? (
                   <div className="small text-muted px-3 py-2 text-center">
-                    אין תיקיות — צור תיקייה בסרגל הימני
+                    אין תיקיות — צור תיקייה בסרגל הצד
                   </div>
                 ) : null}
               </div>
             ) : null}
           </div>
 
-          <div className="dashboard-qr-card-actions d-flex flex-wrap gap-2 justify-content-lg-end mt-2 pt-3">
+          <div className="dashboard-qr-card-actions d-flex flex-wrap gap-2 justify-content-lg-end mt-auto pt-3">
             <button
               type="button"
-              className="btn btn-light border dashboard-qr-icon-btn"
-              title="עיצוב — במחולל"
-              onClick={openEditor}
+              className="btn btn-outline-secondary btn-sm dashboard-qr-action-labeled d-inline-flex align-items-center gap-1"
+              onClick={handleOpenDestination}
             >
-              <FiDroplet aria-hidden />
+              <FiExternalLink size={16} aria-hidden />
+              פתח
             </button>
             <button
               type="button"
-              className="btn btn-light border dashboard-qr-icon-btn"
-              title="עריכה במחולל"
-              onClick={openEditor}
+              className="btn btn-outline-secondary btn-sm dashboard-qr-action-labeled d-inline-flex align-items-center gap-1"
+              onClick={() => setStyleEditOpen(true)}
             >
-              <FiEdit2 aria-hidden />
+              <FiEdit2 size={16} aria-hidden />
+              שינוי
             </button>
             <button
               type="button"
-              className="btn btn-light border dashboard-qr-icon-btn"
-              title="שכפול (בקרוב)"
+              className="btn btn-outline-secondary btn-sm dashboard-qr-action-labeled d-inline-flex align-items-center gap-1"
               onClick={() => onDuplicateStub()}
             >
-              <FiCopy aria-hidden />
+              <FiCopy size={16} aria-hidden />
+              שכפל
             </button>
             <button
               type="button"
-              className="btn btn-light border dashboard-qr-icon-btn text-danger"
-              title="מחיקה"
+              className="btn btn-outline-danger btn-sm dashboard-qr-action-labeled d-inline-flex align-items-center gap-1"
               onClick={handleDelete}
               disabled={deleting}
             >
-              <FiTrash2 aria-hidden />
+              <FiTrash2 size={16} aria-hidden />
+              מחק
             </button>
           </div>
         </div>

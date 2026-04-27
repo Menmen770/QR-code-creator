@@ -132,19 +132,19 @@ function QrStyleLogoTab({
           </ul>
 
       {logoInputMode === "preset" ? (
-        <>
-          <div
-            className="qr-preset-logo-grid"
-            role="group"
-            aria-label="לוגואים מוכנים"
-          >
+        <div
+          className="qr-preset-logo-layout w-100"
+          role="group"
+          aria-label="לוגואים מוכנים"
+        >
+          <div className="qr-preset-logo-rail">
             {PRESET_BRAND_LOGOS.map((preset) => {
               const selected = logoUrl === preset.dataUrl;
               return (
                 <button
                   key={preset.id}
                   type="button"
-                  className={`qr-preset-logo-btn ${selected ? "qr-preset-logo-btn--selected" : ""}`}
+                  className={`qr-preset-logo-btn qr-preset-logo-btn--rail ${selected ? "qr-preset-logo-btn--selected" : ""}`}
                   onClick={() => selectPreset(preset)}
                   title={preset.name}
                   aria-label={`לוגו ${preset.name}`}
@@ -158,7 +158,7 @@ function QrStyleLogoTab({
               );
             })}
           </div>
-        </>
+        </div>
       ) : logoInputMode === "file" ? (
         <>
           <div

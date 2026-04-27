@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FiPlus, FiSearch } from "react-icons/fi";
 import { API_BASE } from "../config";
 import SavedQrCard from "../components/SavedQrCard";
+import DashboardAccountPanel from "../components/DashboardAccountPanel";
 import DashboardSidebar from "../components/DashboardSidebar";
 import {
   UNFILED_ORDER_KEY,
@@ -11,11 +12,16 @@ import {
   deleteFolder,
   folderCounts,
   getOrderedQrIds,
+  isFolderStateMeaningful,
   loadFolderState,
   pruneQrFromFolderState,
   saveFolderState,
   syncFolderStateWithItems,
 } from "../utils/dashboardFoldersStorage";
+import {
+  fetchDashboardFoldersState,
+  putDashboardFoldersState,
+} from "../utils/dashboardFoldersApi";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -24,9 +30,47 @@ function DashboardPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState(null);
   const noticeTimerRef = useRef(null);
-  const [activeById, setActiveById] = useState(() => ({}));
+  const remoteFolderTimerRef = useRef(null);
+  const pendingFolderStateRef = useRef(null);
+
+  const persistFolderState = useCallback((next) => {
+    saveFolderState(next);
+    pendingFolderStateRef.current = next;
+    if (remoteFolderTimerRef.current) {
+      window.clearTimeout(remoteFolderTimerRef.current);
+    }
+    remoteFolderTimerRef.current = window.setTimeout(() => {
+      remoteFolderTimerRef.current = null;
+      const payload = pendingFolderStateRef.current;
+      pendingFolderStateRef.current = null;
+      if (payload) {
+        void putDashboardFoldersState(payload).catch(() => {});
+      }
+    }, 550);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (remoteFolderTimerRef.current) {
+        window.clearTimeout(remoteFolderTimerRef.current);
+        remoteFolderTimerRef.current = null;
+      }
+      const payload = pendingFolderStateRef.current;
+      pendingFolderStateRef.current = null;
+      if (payload) {
+        void putDashboardFoldersState(payload).catch(() => {});
+      }
+    },
+    [],
+  );
   const [folderState, setFolderState] = useState(() => loadFolderState());
+  /** מסנכרן מחדש אחרי טעינת תיקיות מהשרת */
+  const [folderSyncEpoch, setFolderSyncEpoch] = useState(0);
   const [selectedViewId, setSelectedViewId] = useState("all");
+  /** סינון רשימה: הכל | פעילים | לא פעילים */
+  const [activityFilter, setActivityFilter] = useState("all");
+  /** true = מסך עדכון פרטים במקום רשימת הקודים */
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [nameSearch, setNameSearch] = useState("");
   const [debouncedNameSearch, setDebouncedNameSearch] = useState("");
 
@@ -53,12 +97,9 @@ function DashboardPage() {
       if (debouncedNameSearch) {
         qs.set("q", debouncedNameSearch);
       }
-      const res = await fetch(
-        `${API_BASE}/api/saved-qrs?${qs.toString()}`,
-        {
-          credentials: "include",
-        },
-      );
+      const res = await fetch(`${API_BASE}/api/saved-qrs?${qs.toString()}`, {
+        credentials: "include",
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data?.error || "טעינה נכשלה");
@@ -78,35 +119,70 @@ function DashboardPage() {
   }, [loadList]);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const remote = await fetchDashboardFoldersState();
+      if (cancelled) return;
+      if (!remote.ok) {
+        if (!remote.unauthorized && remote.error) {
+          showNotice(remote.error);
+        }
+        setFolderSyncEpoch((e) => e + 1);
+        return;
+      }
+      const serverState = remote.state;
+      const localState = loadFolderState();
+      if (isFolderStateMeaningful(serverState)) {
+        setFolderState(serverState);
+        saveFolderState(serverState);
+      } else if (isFolderStateMeaningful(localState)) {
+        setFolderState(localState);
+        saveFolderState(localState);
+        const put = await putDashboardFoldersState(localState);
+        if (!put.ok && put.error) {
+          showNotice(put.error);
+        }
+      }
+      setFolderSyncEpoch((e) => e + 1);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showNotice]);
+
+  useEffect(() => {
     if (loading) return;
     setFolderState((prev) => {
       const synced = syncFolderStateWithItems(items, prev);
-      saveFolderState(synced);
+      persistFolderState(synced);
       return synced;
     });
-  }, [items, loading]);
+  }, [items, loading, folderSyncEpoch, persistFolderState]);
+
+  const filteredItems = useMemo(() => {
+    if (activityFilter === "all") return items;
+    return items.filter((r) => {
+      const active = r.isActive !== false;
+      return activityFilter === "active" ? active : !active;
+    });
+  }, [items, activityFilter]);
 
   const counts = useMemo(
-    () => folderCounts(items, folderState),
-    [items, folderState],
+    () => folderCounts(filteredItems, folderState),
+    [filteredItems, folderState],
   );
 
   const displayItems = useMemo(() => {
-    const ids = getOrderedQrIds(items, selectedViewId, folderState);
-    const byId = Object.fromEntries(items.map((r) => [String(r._id), r]));
+    const ids = getOrderedQrIds(
+      filteredItems,
+      selectedViewId,
+      folderState,
+    );
+    const byId = Object.fromEntries(
+      filteredItems.map((r) => [String(r._id), r]),
+    );
     return ids.map((id) => byId[id]).filter(Boolean);
-  }, [items, selectedViewId, folderState]);
-
-  const countLabel = useMemo(() => {
-    if (loading) return "טוען…";
-    if (selectedViewId === "all") return `כל (${items.length})`;
-    if (selectedViewId === UNFILED_ORDER_KEY) {
-      return `ללא תיקייה (${counts.unfiled})`;
-    }
-    const f = folderState.folders.find((x) => x.id === selectedViewId);
-    const n = counts.perFolder[selectedViewId] ?? 0;
-    return `${f?.name || "תיקייה"} (${n})`;
-  }, [loading, items.length, selectedViewId, counts, folderState.folders]);
+  }, [filteredItems, selectedViewId, folderState]);
 
   const openInEditor = useCallback(
     (row) => {
@@ -124,47 +200,37 @@ function DashboardPage() {
     [navigate],
   );
 
-  const getEffectiveActive = useCallback(
-    (id) => {
-      const sid = String(id);
-      if (Object.prototype.hasOwnProperty.call(activeById, sid)) {
-        return Boolean(activeById[sid]);
-      }
-      return true;
-    },
-    [activeById],
-  );
-
-  const handleToggleActive = useCallback(
-    (id) => {
-      const sid = String(id);
-      setActiveById((prev) => ({
-        ...prev,
-        [sid]: !getEffectiveActive(sid),
-      }));
-      showNotice(
-        "שינוי סטטוס מוצג כאן בלבד — יישמר בשרת אחרי הרחבת סכמת MongoDB.",
-      );
-    },
-    [getEffectiveActive, showNotice],
-  );
-
-  const handleAssignFolder = useCallback((qrId, folderIdOrNull) => {
-    setFolderState((prev) => {
-      const next = assignQrToFolder(prev, qrId, folderIdOrNull);
-      saveFolderState(next);
-      return next;
-    });
+  const handleSavedQrFromApi = useCallback((saved) => {
+    if (!saved?._id) return;
+    setItems((prev) =>
+      prev.map((r) =>
+        String(r._id) === String(saved._id) ? { ...r, ...saved } : r,
+      ),
+    );
   }, []);
 
-  const handleDelete = useCallback((id) => {
-    setItems((prev) => prev.filter((r) => r._id !== id));
-    setFolderState((prev) => {
-      const next = pruneQrFromFolderState(prev, id);
-      saveFolderState(next);
-      return next;
-    });
-  }, []);
+  const handleAssignFolder = useCallback(
+    (qrId, folderIdOrNull) => {
+      setFolderState((prev) => {
+        const next = assignQrToFolder(prev, qrId, folderIdOrNull);
+        persistFolderState(next);
+        return next;
+      });
+    },
+    [persistFolderState],
+  );
+
+  const handleDelete = useCallback(
+    (id) => {
+      setItems((prev) => prev.filter((r) => r._id !== id));
+      setFolderState((prev) => {
+        const next = pruneQrFromFolderState(prev, id);
+        persistFolderState(next);
+        return next;
+      });
+    },
+    [persistFolderState],
+  );
 
   const handleCreateFolderWithName = useCallback(
     (name) => {
@@ -175,37 +241,31 @@ function DashboardPage() {
       }
       setFolderState((prev) => {
         const next = createFolder(prev, trimmed);
-        saveFolderState(next);
+        persistFolderState(next);
         return next;
       });
     },
-    [showNotice],
+    [showNotice, persistFolderState],
   );
 
   const handleDeleteFolder = useCallback(
     (folderId, folderName) => {
       if (
         !window.confirm(
-          `למחוק את התיקייה "${folderName}"? הקודים שבה יסומנו כללא תיקייה (מקומית).`,
+          `למחוק את התיקייה "${folderName}"? הקודים שבה יעברו ל«ללא תיקייה».`,
         )
       ) {
         return;
       }
       setFolderState((prev) => {
         const next = deleteFolder(prev, folderId);
-        saveFolderState(next);
+        persistFolderState(next);
         return next;
       });
       setSelectedViewId((v) => (v === folderId ? "all" : v));
     },
-    [],
+    [persistFolderState],
   );
-
-  const handleStatisticsStub = useCallback(() => {
-    showNotice(
-      "סטטיסטיקות סריקות ופילוח גיאוגרפי — אחרי שכבת המעקב והשדות בשרת.",
-    );
-  }, [showNotice]);
 
   const handleDuplicateStub = useCallback(() => {
     showNotice("שכפול קוד לרשומה חדשה — אחרי הרחבת ה-API והמודל ב-MongoDB.");
@@ -256,6 +316,24 @@ function DashboardPage() {
         )}
       </div>
     </div>
+  ) : filteredItems.length === 0 ? (
+    <div className="card shadow-sm border-0 dashboard-empty-card">
+      <div className="card-body text-center py-5 px-4">
+        <h2 className="h5 fw-bold mb-2">אין קודים בסינון הזה</h2>
+        <p className="text-muted mb-4">
+          {activityFilter === "active"
+            ? "אין כרגע קודים מסומנים כפעילים."
+            : "אין כרגע קודים מסומנים כלא פעילים."}
+        </p>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm me-2"
+          onClick={() => setActivityFilter("all")}
+        >
+          הצג הכל
+        </button>
+      </div>
+    </div>
   ) : displayItems.length === 0 ? (
     <div className="card shadow-sm border-0 dashboard-empty-card">
       <div className="card-body text-center py-5 px-4">
@@ -275,13 +353,11 @@ function DashboardPage() {
         <li key={row._id}>
           <SavedQrCard
             row={row}
-            isActive={getEffectiveActive(row._id)}
-            onToggleActive={handleToggleActive}
             onOpenEditor={openInEditor}
             onDuplicateStub={handleDuplicateStub}
-            onStatisticsStub={handleStatisticsStub}
             onDelete={handleDelete}
             onStubNotice={showNotice}
+            onSavedQrFromApi={handleSavedQrFromApi}
             folderDisplayName={folderNameForRow(row)}
             foldersForSelect={folderState.folders}
             assignedFolderId={folderState.assignments[String(row._id)] ?? null}
@@ -295,37 +371,47 @@ function DashboardPage() {
   return (
     <div className="dashboard-page py-4 py-md-5" dir="rtl">
       <div className="container-fluid dashboard-layout px-3 px-md-4">
-        <div className="dashboard-toolbar d-flex flex-column flex-lg-row gap-3 justify-content-between align-items-lg-center mb-3 mb-md-4">
-          <div className="min-w-0 flex-grow-1">
-            <h1 className="dashboard-title mb-1">הקודים שלי</h1>
-            <p className="dashboard-subtitle text-muted mb-2 mb-md-2">
-              ניהול הקודים השמורים — יצירה, עריכה והמשך עבודה במחולל.
-            </p>
-            <div className="d-flex flex-wrap align-items-center gap-2">
-              <span className="dashboard-count-badge">{countLabel}</span>
-              <div className="input-group input-group-sm dashboard-name-search flex-grow-1" style={{ maxWidth: "22rem" }}>
-                <span className="input-group-text bg-white border-end-0 text-secondary">
-                  <FiSearch aria-hidden />
-                </span>
+        <header className="dashboard-toolbar-strip mb-3 mb-md-4">
+          <div className="dashboard-toolbar-hero">
+            <div className="dashboard-toolbar-col dashboard-toolbar-col--title">
+              <h1 className="dashboard-title mb-1">הקודים שלי</h1>
+              <p className="dashboard-subtitle mb-0 mb-lg-0">
+                קודים שמורים — חיפוש, שמירה ועריכה.
+              </p>
+            </div>
+            <div className="dashboard-toolbar-col dashboard-toolbar-col--search">
+              <label
+                className="visually-hidden"
+                htmlFor="dashboard-saved-qr-search"
+              >
+                חיפוש לפי שם הקוד
+              </label>
+              <div className="dashboard-search-shell">
+                <FiSearch className="dashboard-search-icon" aria-hidden />
                 <input
+                  id="dashboard-saved-qr-search"
                   type="search"
-                  className="form-control border-start-0"
+                  className="form-control dashboard-search-input"
                   placeholder="חיפוש לפי שם הקוד…"
                   value={nameSearch}
                   onChange={(e) => setNameSearch(e.target.value)}
-                  aria-label="חיפוש לפי שם"
+                  autoComplete="off"
+                  aria-label="חיפוש לפי שם הקוד"
+                  disabled={accountSettingsOpen}
                 />
               </div>
             </div>
+            <div className="dashboard-toolbar-col dashboard-toolbar-col--action">
+              <Link
+                to="/create"
+                className="dashboard-create-layered text-decoration-none d-inline-flex align-items-center gap-2"
+              >
+                <FiPlus className="flex-shrink-0" aria-hidden />
+                יצירת QR חדש
+              </Link>
+            </div>
           </div>
-          <Link
-            to="/create"
-            className="btn btn-teal btn-lg dashboard-create-btn align-self-stretch align-self-lg-auto"
-          >
-            <FiPlus className="me-2" aria-hidden />
-            יצירת QR חדש
-          </Link>
-        </div>
+        </header>
 
         {notice && (
           <div
@@ -348,14 +434,30 @@ function DashboardPage() {
             <DashboardSidebar
               folders={folderState.folders}
               selectedViewId={selectedViewId}
-              onSelectView={setSelectedViewId}
+              onSelectView={(id) => {
+                setAccountSettingsOpen(false);
+                setSelectedViewId(id);
+              }}
               counts={counts}
               onCreateFolderWithName={handleCreateFolderWithName}
               onDeleteFolder={handleDeleteFolder}
+              onOpenAccountSettings={() => setAccountSettingsOpen(true)}
+              accountSettingsActive={accountSettingsOpen}
+              activityFilter={activityFilter}
+              onActivityFilterChange={(id) => {
+                setAccountSettingsOpen(false);
+                setActivityFilter(id);
+              }}
             />
           </div>
           <div className="col-12 col-lg col-xl-9 col-xxl-8 dashboard-main-col">
-            {listSection}
+            {accountSettingsOpen ? (
+              <DashboardAccountPanel
+                onClose={() => setAccountSettingsOpen(false)}
+              />
+            ) : (
+              listSection
+            )}
           </div>
         </div>
       </div>

@@ -190,6 +190,29 @@ export function deleteFolder(state, folderId) {
   return { ...state, folders, assignments, folderOrders };
 }
 
+/** האם יש נתונים משמעותיים (למיגרציה מקומית ↔ ענן) */
+export function isFolderStateMeaningful(state) {
+  if (!state || typeof state !== "object") return false;
+  if (Array.isArray(state.folders) && state.folders.length > 0) return true;
+  if (
+    state.assignments &&
+    typeof state.assignments === "object" &&
+    Object.keys(state.assignments).length > 0
+  ) {
+    return true;
+  }
+  if (Array.isArray(state.globalOrder) && state.globalOrder.length > 0) {
+    return true;
+  }
+  const fo = state.folderOrders;
+  if (fo && typeof fo === "object") {
+    return Object.keys(fo).some(
+      (k) => Array.isArray(fo[k]) && fo[k].length > 0,
+    );
+  }
+  return false;
+}
+
 export function folderCounts(items, state) {
   const ids = items.map((i) => String(i._id));
   let unfiled = 0;

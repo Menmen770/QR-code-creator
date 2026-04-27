@@ -9,6 +9,9 @@ import {
   isPresetLogoDataUrl,
 } from "./presetBrandLogos";
 import { isSvgDataUrl, rasterizeSvgDataUrlToPng } from "./rasterizeSvgLogo";
+import { effectiveSavedQrEncodedText } from "./qrEncodedText";
+import { getEffectBackground } from "./qrConstants";
+import { paintExportBackground } from "./qrExportBackground";
 
 const MAX_LOGO_FOR_PREVIEW = 400_000;
 
@@ -19,6 +22,48 @@ function buildBgForApi(style) {
   if (stickerType !== "none") return "transparent";
   if (bgColorMode === "effect" || bgColorMode === "none") return "transparent";
   return bg;
+}
+
+/**
+ * מצייר מאחורי ה-QR את אותו רקע כמו במחולל (צבע / אפקט / לבן כשהמצב "ללא רקע").
+ */
+function compositeDataUrlOnSavedStyleBackground(qrDataUrl, style) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        if (!w || !h) {
+          resolve(qrDataUrl);
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d", { alpha: true });
+        const bgColorMode = style.bgColorMode || "solid";
+        if (bgColorMode === "none") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+        } else {
+          paintExportBackground(ctx, w, h, {
+            bgColorMode,
+            bgColor: style.bgColor || "#ffffff",
+            bgEffect: style.bgEffect || "none",
+            getEffectBackground,
+          });
+        }
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } catch {
+        resolve(qrDataUrl);
+      }
+    };
+    img.onerror = () => resolve(qrDataUrl);
+    img.src = qrDataUrl;
+  });
 }
 
 function compositeStickerPreview(qrDataUrl, stickerType, fgColor) {
@@ -69,7 +114,7 @@ function compositeStickerPreview(qrDataUrl, stickerType, fgColor) {
  */
 export async function getSavedQrPreviewDataUrl(row, apiBase) {
   const style = row?.style && typeof row.style === "object" ? row.style : {};
-  const text = String(row?.qrValue || "").trim();
+  const text = effectiveSavedQrEncodedText(row);
   if (!text) return "";
 
   const fg = style.fgColor || "#000000";
@@ -116,7 +161,8 @@ export async function getSavedQrPreviewDataUrl(row, apiBase) {
   if (stickerType !== "none") {
     qrImage = await compositeStickerPreview(qrImage, stickerType, fg);
   }
-  return qrImage;
+
+  return compositeDataUrlOnSavedStyleBackground(qrImage, style);
 }
 
 export function downloadDataUrlPng(dataUrl, filename) {

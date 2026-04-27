@@ -30,6 +30,7 @@ const savedQrSchema = new mongoose.Schema(
     qrInputs: { type: mongoose.Schema.Types.Mixed, default: {} },
     style: { type: styleSchema, default: () => ({}) },
     displayName: { type: String, default: "", trim: true },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 );
